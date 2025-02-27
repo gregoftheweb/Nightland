@@ -1,0 +1,271 @@
+body {
+    background: #000;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#splash, #princess-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+#princess-screen {
+    display: none;
+    flex-direction: column;
+}
+
+#splash img, #princess-screen img {
+    max-width: 80%;
+    max-height: 80%;
+}
+
+#splash button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    color: #8B0000;
+    border: 4px solid #8B0000;
+    padding: 10px 20px;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+#princess-screen button {
+    background: transparent;
+    color: #8B0000;
+    border: 4px solid #8B0000;
+    padding: 10px 20px;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    position: absolute;
+    bottom: 10%;
+}
+
+#princess-screen .princess-dialog {
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    padding: 5px 10px;
+    font-family: 'Quintessential', serif;
+    font-size: 16px;
+    white-space: pre-wrap;
+    width: 700px;
+}
+
+#game-container {
+    display: none;
+    position: relative;
+    width: 800px;
+    height: 800px;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+    background: #000;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#game-container::-webkit-scrollbar {
+    display: none;
+}
+
+#gameplay {
+    position: relative;
+    width: 800px;
+    height: 1600px;
+    z-index: 2;
+}
+
+#map {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+#redoubt {
+    position: absolute;
+    width: 320px;
+    height: 160px;
+    bottom: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: url('/assets/images/redoubt.png');
+    background-size: cover;
+    z-index: 2;
+    cursor: pointer;
+}
+
+#watcher {
+    position: absolute;
+    width: 160px; /* Doubled from 80px */
+    height: 160px; /* Doubled from 80px */
+    top: 0;
+    right: 0;
+    background: url('/assets/images/watcherse.png');
+    background-size: cover;
+    z-index: 2;
+    cursor: pointer;
+}
+
+#player {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: url('/assets/images/player.png');
+    background-size: cover;
+    z-index: 3;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+#abhuman {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: url('/assets/images/abhuman.png');
+    background-size: cover;
+    z-index: 3;
+    transition: all 0.2s ease;
+    display: none;
+    cursor: pointer;
+}
+
+#status-bar {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    padding: 5px 10px;
+    font-family: monospace;
+    font-size: 14px;
+    z-index: 4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#gear-icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: block;
+}
+
+#settings-menu {
+    display: none;
+    position: fixed;
+    bottom: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    background: #222;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 14px;
+    z-index: 5;
+}
+
+#dialog.game-dialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    padding: 5px 10px;
+    font-family: monospace;
+    font-size: 14px;
+    z-index: 10;
+    white-space: pre-wrap;
+}
+
+#info-box {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    padding: 10px 15px;
+    font-family: monospace;
+    font-size: 14px;
+    z-index: 10;
+    max-width: 400px;
+    text-align: center;
+}
+
+#combat-player, #combat-enemy1, #combat-enemy2, #combat-enemy3, #combat-enemy4 {
+    display: none;
+    position: fixed;
+    right: 10px;
+    width: 200px;
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    padding: 5px 10px;
+    font-family: monospace;
+    font-size: 14px;
+    z-index: 10;
+}
+
+#combat-player { top: 20%; }
+#combat-enemy1 { top: 40%; }
+#combat-enemy2 { top: 55%; }
+#combat-enemy3 { top: 70%; }
+#combat-enemy4 { top: 85%; }
+
+.flicker {
+    animation: flicker 0.5s ease-in-out;
+}
+
+@keyframes flicker {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+#combat-enemy1.dead, #combat-enemy2.dead, #combat-enemy3.dead, #combat-enemy4.dead {
+    color: #FF0000 !important;
+    border-color: #FF0000 !important;
+}
+
+#background-audio {
+    display: none;
+}
