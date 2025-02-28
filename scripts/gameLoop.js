@@ -114,7 +114,7 @@ function toggleSFX() {
 
 function calculateTurnOrder() {
     const combatants = [gameState.player, ...gameState.attackSlots.map(slot => slot.monster).filter(m => m && m.hp > 0)];
-    gameState.turnOrder = combatants;
+    gameState.turnOrder = combatants.filter(c => c.hp > 0); // Only living combatants
     gameState.combatTurn = gameState.turnOrder[0];
 }
 
@@ -129,8 +129,17 @@ function combatStep() {
 
     let activeMonsters = gameState.attackSlots.map(slot => slot.monster).filter(m => m && m.hp > 0);
     let allMonsters = gameState.attackSlots.map(slot => slot.monster);
+
+    console.log('Turn Order:', gameState.turnOrder.map(c => c.name + ' HP:' + c.hp), 'Current Index:', currentIndex);
+    console.log('All Monsters:', allMonsters.map(m => m ? m.name + ' HP:' + m.hp : 'null'), 'Active Monsters:', activeMonsters.map(m => m.name + ' HP:' + m.hp));
+
+    // Only clear dialogs for subsequent monster turns, not immediately after player
+    if (currentIndex > 1 || roundNumber > 1) {
+        updateCombatDialogs("", allMonsters.map(() => ""), gameState.player, allMonsters);
+    }
+
     let playerComment = "";
-    let enemyComments = allMonsters.map(slot => slot && slot.hp <= 0 ? "Monster is dead!" : slot.lastComment || "");
+    let enemyComments = allMonsters.map(() => "");
 
     if (current === gameState.player) {
         const target = activeMonsters[0];
@@ -138,25 +147,53 @@ function combatStep() {
             if (Math.random() < 0.8) {
                 target.hp -= 6;
                 playerComment = text.combatPlayerHitComment;
-                enemyComments = allMonsters.map(slot => slot === target && slot.hp <= 0 ? "Monster is dead!" : slot.lastComment || "");
+                enemyComments = allMonsters.map(slot => slot === target && slot.hp <= 0 ? "Monster is dead!" : "");
                 if (target.hp <= 0) {
                     const deadDiv = document.getElementById(`combat-enemy${gameState.attackSlots.indexOf(gameState.attackSlots.find(s => s.monster === target)) + 1}`);
                     if (deadDiv) {
                         deadDiv.classList.add('dead');
                     }
+                    calculateTurnOrder();
+                    console.log('After Player Kill - Attack Slots:', gameState.attackSlots.map(s => s.monster.name + ' HP:' + s.monster.hp));
                 }
             } else {
                 playerComment = text.combatPlayerMissComment;
             }
         }
     } else if (activeMonsters.includes(current)) {
+        const monsterIndex = allMonsters.indexOf(current);
+        const isFirstLivingMonster = currentIndex === 1 && allMonsters.some(m => m && m.hp <= 0);
+        if (isFirstLivingMonster) {
+            console.log('Cleanup Triggered - All Monsters:', allMonsters.map(m => m ? m.name + ' HP:' + m.hp : 'null'), 'Active Monsters:', activeMonsters.map(m => m.name + ' HP:' + m.hp));
+            // Filter and reset dialogs
+            gameState.attackSlots = gameState.attackSlots.filter(s => s.monster && s.monster.hp > 0);
+            allMonsters = gameState.attackSlots.map(slot => slot.monster);
+            updateMonsterPositions();
+            updateCombatDialogs("", allMonsters.map(() => ""), gameState.player, allMonsters);
+
+            // Apply flicker
+            for (let i = 1; i <= 4; i++) {
+                const enemyDiv = document.getElementById(`combat-enemy${i}`);
+                if (enemyDiv && enemyDiv.style.display !== 'none') {
+                    enemyDiv.classList.remove('flicker');
+                    enemyDiv.classList.add('flicker');
+                    console.log(`Flicker applied combat-enemy${i}:`, enemyDiv.classList);
+                    setTimeout(() => {
+                        enemyDiv.classList.remove('flicker');
+                        console.log(`Flicker removed combat-enemy${i}:`, enemyDiv.classList);
+                    }, 500);
+                }
+            }
+        }
+
+        // Monster's attack
         if (Math.random() < 0.5) {
             gameState.player.hp -= 4;
-            enemyComments = allMonsters.map(slot => slot === current ? text.combatEnemyHitComment : slot && slot.hp <= 0 ? "Monster is dead!" : slot.lastComment || "");
-            allMonsters[currentIndex - 1].lastComment = text.combatEnemyHitComment;
+            enemyComments[monsterIndex] = text.combatEnemyHitComment;
+            allMonsters[monsterIndex].lastComment = text.combatEnemyHitComment;
         } else {
-            enemyComments = allMonsters.map(slot => slot === current ? text.combatEnemyMissComment : slot && slot.hp <= 0 ? "Monster is dead!" : slot.lastComment || "");
-            allMonsters[currentIndex - 1].lastComment = text.combatEnemyMissComment;
+            enemyComments[monsterIndex] = text.combatEnemyMissComment;
+            allMonsters[monsterIndex].lastComment = text.combatEnemyMissComment;
         }
     }
 
@@ -184,20 +221,21 @@ function combatStep() {
         moveWaitingMonsters();
 
         if (current === gameState.turnOrder[gameState.turnOrder.length - 1]) {
-            resolveRound(allMonsters); // Pass allMonsters
+            resolveRound(allMonsters);
             calculateTurnOrder();
-            gameState.combatTurn = gameState.turnOrder[0];
-            roundNumber++;
+            console.log('End of Round - Turn Order:', gameState.turnOrder.map(c => c.name + ' HP:' + c.hp));
         } else {
             renderMap();
         }
     }
 }
 
+
+
+
 function resolveRound(allMonsters) {
     let activeMonsters = gameState.attackSlots.map(slot => slot.monster).filter(m => m && m.hp > 0);
     let deadMonsters = gameState.attackSlots.filter(slot => slot.monster && slot.monster.hp <= 0);
-    let shouldFlicker = deadMonsters.length > 0;
 
     if (deadMonsters.length > 0) {
         deadMonsters.forEach(slot => {
@@ -220,22 +258,11 @@ function resolveRound(allMonsters) {
     }
 
     calculateTurnOrder();
-    updateCombatDialogs("", allMonsters.map(slot => slot && slot.hp <= 0 ? "Monster is dead!" : slot.lastComment || ""), gameState.player, allMonsters);
-    for (let i = 1; i <= 4; i++) {
-        const enemyDiv = document.getElementById(`combat-enemy${i}`);
-        if (enemyDiv) {
-            enemyDiv.classList.remove('dead');
-            enemyDiv.style.color = '#8B0000';
-            enemyDiv.style.borderColor = '#8B0000';
-            if (shouldFlicker && enemyDiv.style.display === 'block') {
-                enemyDiv.classList.add('flicker');
-                setTimeout(() => enemyDiv.classList.remove('flicker'), 500);
-            }
-        }
-    }
     moveWaitingMonsters();
     updateMonsterPositions();
 }
+
+
 
 function moveWaitingMonsters() {
     const activeMonsters = gameState.activeMonsters.filter(m => m.active && m.hp > 0);
@@ -399,5 +426,8 @@ function movePlayer(direction) {
 setupEventListeners(audio, statusBar, gameContainer, renderMap, movePlayer, combatStep, showPrincessScreen, startGame, showInfoBox, toggleSettings, toggleSFX);
 
 // Initial game setup
-spawnMonster(gameState.monsters[0]);
+// Initial game setup
+for (let i = 0; i < 4; i++) {
+    spawnMonster(gameState.monsters[0]);
+}
 renderMap();

@@ -20,12 +20,33 @@ export function updateCombatDialogs(playerComment = "", enemyComments = [], play
         const enemyDiv = document.getElementById(`combat-enemy${i}`);
         const monster = monsters[i - 1];
         if (enemyDiv) {
+            const isFlickering = enemyDiv.classList.contains('flicker');
+            
             if (monster) {
-                const displayHP = Math.max(0, monster.hp); // Cap HP at 0
+                const displayHP = Math.max(0, monster.hp);
                 enemyDiv.innerHTML = `${monster.name}<br>HP: ${displayHP}<br>${enemyComments[i - 1] || ""}`;
                 enemyDiv.style.display = 'block';
+                
+                // Keep .dead until cleanup (no comment or specific cleanup phase)
+                if (monster.hp <= 0 && (!enemyComments[i - 1] || enemyComments[i - 1] === "Monster is dead!")) {
+                    enemyDiv.classList.add('dead');
+                } else {
+                    enemyDiv.classList.remove('dead');
+                    enemyDiv.style.color = '#8B0000';
+                    enemyDiv.style.borderColor = '#8B0000';
+                }
+                
+                console.log(`combat-enemy${i}: HP=${monster.hp}, DisplayHP=${displayHP}, Comment=${enemyComments[i - 1]}, Classes=${enemyDiv.classList}, Color=${enemyDiv.style.color}`);
             } else {
+                enemyDiv.innerHTML = '';
                 enemyDiv.style.display = 'none';
+                enemyDiv.classList.remove('dead', 'flicker');
+                enemyDiv.style.color = '#8B0000';
+                enemyDiv.style.borderColor = '#8B0000';
+            }
+
+            if (isFlickering && enemyDiv.style.display !== 'none') {
+                enemyDiv.classList.add('flicker');
             }
         }
     }
