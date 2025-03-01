@@ -16,7 +16,7 @@ splashButton.textContent = text.splashScreenButtonText;
 princessButton.textContent = text.princessScreenButtonText;
 princessDialog.textContent = text.princessScreenText;
 sfxLabel.textContent = text.settingsSFXLabel;
-statusBar.style.display = 'none'; // Hide status bar initially
+statusBar.style.display = 'none';
 
 const audio = document.getElementById('background-audio');
 const gameContainer = document.getElementById('game-container');
@@ -114,7 +114,7 @@ function toggleSFX() {
 
 function calculateTurnOrder() {
     const combatants = [gameState.player, ...gameState.attackSlots.map(slot => slot.monster).filter(m => m && m.hp > 0)];
-    gameState.turnOrder = combatants.filter(c => c.hp > 0); // Only living combatants
+    gameState.turnOrder = combatants.filter(c => c.hp > 0);
     gameState.combatTurn = gameState.turnOrder[0];
 }
 
@@ -130,10 +130,6 @@ function combatStep() {
     let activeMonsters = gameState.attackSlots.map(slot => slot.monster).filter(m => m && m.hp > 0);
     let allMonsters = gameState.attackSlots.map(slot => slot.monster);
 
-    console.log('Turn Order:', gameState.turnOrder.map(c => c.name + ' HP:' + c.hp), 'Current Index:', currentIndex);
-    console.log('All Monsters:', allMonsters.map(m => m ? m.name + ' HP:' + m.hp : 'null'), 'Active Monsters:', activeMonsters.map(m => m.name + ' HP:' + m.hp));
-
-    // Only clear dialogs for subsequent monster turns, not immediately after player
     if (currentIndex > 1 || roundNumber > 1) {
         updateCombatDialogs("", allMonsters.map(() => ""), gameState.player, allMonsters);
     }
@@ -154,7 +150,6 @@ function combatStep() {
                         deadDiv.classList.add('dead');
                     }
                     calculateTurnOrder();
-                    console.log('After Player Kill - Attack Slots:', gameState.attackSlots.map(s => s.monster.name + ' HP:' + s.monster.hp));
                 }
             } else {
                 playerComment = text.combatPlayerMissComment;
@@ -164,29 +159,21 @@ function combatStep() {
         const monsterIndex = allMonsters.indexOf(current);
         const isFirstLivingMonster = currentIndex === 1 && allMonsters.some(m => m && m.hp <= 0);
         if (isFirstLivingMonster) {
-            console.log('Cleanup Triggered - All Monsters:', allMonsters.map(m => m ? m.name + ' HP:' + m.hp : 'null'), 'Active Monsters:', activeMonsters.map(m => m.name + ' HP:' + m.hp));
-            // Filter and reset dialogs
             gameState.attackSlots = gameState.attackSlots.filter(s => s.monster && s.monster.hp > 0);
             allMonsters = gameState.attackSlots.map(slot => slot.monster);
             updateMonsterPositions();
             updateCombatDialogs("", allMonsters.map(() => ""), gameState.player, allMonsters);
 
-            // Apply flicker
             for (let i = 1; i <= 4; i++) {
                 const enemyDiv = document.getElementById(`combat-enemy${i}`);
                 if (enemyDiv && enemyDiv.style.display !== 'none') {
                     enemyDiv.classList.remove('flicker');
                     enemyDiv.classList.add('flicker');
-                    console.log(`Flicker applied combat-enemy${i}:`, enemyDiv.classList);
-                    setTimeout(() => {
-                        enemyDiv.classList.remove('flicker');
-                        console.log(`Flicker removed combat-enemy${i}:`, enemyDiv.classList);
-                    }, 500);
+                    setTimeout(() => enemyDiv.classList.remove('flicker'), 500);
                 }
             }
         }
 
-        // Monster's attack
         if (Math.random() < 0.5) {
             gameState.player.hp -= 4;
             enemyComments[monsterIndex] = text.combatEnemyHitComment;
@@ -223,15 +210,13 @@ function combatStep() {
         if (current === gameState.turnOrder[gameState.turnOrder.length - 1]) {
             resolveRound(allMonsters);
             calculateTurnOrder();
-            console.log('End of Round - Turn Order:', gameState.turnOrder.map(c => c.name + ' HP:' + c.hp));
+            gameState.combatTurn = gameState.turnOrder[0];
+            roundNumber++;
         } else {
             renderMap();
         }
     }
 }
-
-
-
 
 function resolveRound(allMonsters) {
     let activeMonsters = gameState.attackSlots.map(slot => slot.monster).filter(m => m && m.hp > 0);
@@ -261,8 +246,6 @@ function resolveRound(allMonsters) {
     moveWaitingMonsters();
     updateMonsterPositions();
 }
-
-
 
 function moveWaitingMonsters() {
     const activeMonsters = gameState.activeMonsters.filter(m => m.active && m.hp > 0);
@@ -425,9 +408,6 @@ function movePlayer(direction) {
 // Setup event listeners before any rendering
 setupEventListeners(audio, statusBar, gameContainer, renderMap, movePlayer, combatStep, showPrincessScreen, startGame, showInfoBox, toggleSettings, toggleSFX);
 
-// Initial game setup
-// Initial game setup
-for (let i = 0; i < 4; i++) {
-    spawnMonster(gameState.monsters[0]);
-}
+// Initial game setup (single spawn, no test setup)
+spawnMonster(gameState.monsters[0]);
 renderMap();
