@@ -1,0 +1,251 @@
+/* nightland/src/styles/styles.css */
+
+/* Base Styles */
+body, html {
+    background-color: #000000;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden; /* Remove scrollbars on body/html */
+}
+
+.app {
+    font-family: 'Quintessential', cursive;
+    background-color: #000000;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Remove scrollbars on app */
+}
+
+/* Splash Screen */
+#splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#splash img {
+    height: 80vh;
+    width: auto;
+    max-width: 100%;
+}
+
+#splash-button {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 40px;
+    background-color: transparent;
+    border: 2px solid #8B0000;
+    color: #8B0000;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+/* Princess Screen */
+#princess-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#princess-screen img {
+    height: 80vh;
+    width: auto;
+    max-width: 100%;
+}
+
+.princess-dialog {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    max-height: 33.33vh;
+    overflow-y: auto;
+    background: transparent;
+    border: 2px solid #8B0000;
+    color: #8B0000;
+    padding: 10px;
+    font-family: 'Quintessential', cursive;
+    font-size: 26px;
+    text-align: center;
+    z-index: 901;
+}
+
+#princess-button {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 40px;
+    background-color: transparent;
+    border: 2px solid #8B0000;
+    color: #8B0000;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+/* Gameplay Screen - Use a fixed-size viewport without scrollbars */
+#gameplay-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: 800;
+    overflow: hidden; /* No scrollbars */
+    /* Add for debugging: */
+    outline: 1px solid red !important; /* Force outline to show */
+}
+
+/* Game Board - Full game world, positioned relative for absolute children */
+.game-board {
+    position: relative; /* Required for absolute positioning of child elements */
+    width: 2000px; /* Updated: 2000px wide */
+    height: 2000px; /* Updated: 2000px tall */
+    background-color: #000000;
+    z-index: 801; /* Ensure game board is above background */
+    /* Add for debugging: */
+    outline: 1px solid blue !important; /* Force outline to show */
+}
+
+/* Game Elements - Use absolute for movement, positioned dynamically */
+#player {
+    position: absolute; /* Use absolute for movement */
+    width: 40px; /* Ensure size */
+    height: 40px; /* Ensure size */
+    background: url('../../public/assets/images/player.png') no-repeat center center / cover; /* Use relative path (working) */
+    z-index: 804; /* Ensure player is on top of everything (highest z-index) */
+    transition: all 0.2s ease; /* For smooth movement */
+    cursor: pointer;
+    visibility: visible !important; /* Force visible */
+    opacity: 1 !important; /* Force fully opaque */
+    /* Add for debugging: */
+    outline: 1px solid yellow !important; /* Force outline to show */
+}
+
+#redoubt {
+    position: absolute; /* Use absolute for movement */
+    width: 197px; /* Updated size to match new image */
+    height: 160px; /* Updated size to match new image */
+    background: url('../../public/assets/images/redoubt.png') no-repeat center center / cover; /* Use relative path (working) */
+    z-index: 802; /* Below player */
+    cursor: pointer;
+    visibility: visible !important; /* Force visible */
+    opacity: 1 !important; /* Force fully opaque */
+    /* Add for debugging: */
+    outline: 1px solid green !important; /* Force outline to show */
+}
+
+/* Status Bar - 25% smaller (width, height, font size) */
+#status-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 225px; /* 25% smaller (300px * 0.75) */
+    height: 30px; /* 25% smaller (40px * 0.75, adjusted for padding) */
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    padding: 3.75px 7.5px; /* 25% smaller (5px 10px * 0.75) */
+    font-family: monospace;
+    font-size: 12.5px; /* Increased by 2pts from 10.5px */
+    z-index: 805; /* Above player and redoubt */
+    justify-content: space-between; /* Ensure space between HP and gear icon */
+    align-items: center;
+}
+
+/* Gear Icon - Aligned right in status bar */
+#gear-icon {
+    width: 15px; /* 25% smaller (20px * 0.75) */
+    height: 15px; /* 25% smaller (20px * 0.75) */
+    cursor: pointer;
+    margin-left: auto; /* Align right within flex container */
+    display: block; /* Ensure visibility */
+    /* Change black SVG to red using filter (assuming /assets/images/gear.svg is black) */
+    filter: invert(21%) sepia(93%) saturate(7426%) hue-rotate(359deg) brightness(102%) contrast(107%);
+}
+
+/* Combat UI Elements (unchanged for now) */
+#test-damage, #start-combat {
+    position: absolute;
+    bottom: 60px;
+    width: 150px;
+    height: 40px;
+    background-color: transparent;
+    border: 2px solid #8B0000;
+    color: #8B0000;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+#test-damage { left: 10px; }
+#start-combat { left: 170px; }
+
+.combat-player, .combat-enemy-1, .combat-enemy-2, .combat-enemy-3, .combat-enemy-4 {
+    display: block;
+    position: fixed;
+    right: 10px;
+    width: 200px;
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    padding: 5px 10px;
+    font-family: monospace;
+    font-size: 14px;
+    z-index: 10;
+    min-height: 60px;
+    white-space: pre-wrap;
+}
+
+.combat-player { top: 20%; }
+.combat-enemy-1 { top: 40%; }
+.combat-enemy-2 { top: 55%; }
+.combat-enemy-3 { top: 70%; }
+.combat-enemy-4 { top: 85%; }
+
+.flicker {
+    animation: flicker 0.5s ease-in-out;
+}
+
+@keyframes flicker {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.combat-enemy-1.dead, .combat-enemy-2.dead, .combat-enemy-3.dead, .combat-enemy-4.dead {
+    color: #FF0000 !important;
+    border-color: #FF0000 !important;
+}
+
+.background-audio {
+    display: none;
+}
