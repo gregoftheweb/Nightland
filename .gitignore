@@ -1,0 +1,58 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build directories
+/dist/
+/build/
+/public/
+
+# Logs
+*.log
+*.log.*
+
+# System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# OS-specific files
+*.swp
+*.swo
+
+# IDEs & Editors
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Temporary files
+*.bak
+*.tmp
+
+# SASS cache
+.sass-cache/
+
+# Coverage
+coverage/
+
+# Dependency directories
+.bower_components/
+
+# Package lock
+package-lock.json
+yarn.lock
+
+# Test output
+/test/
+
+# react / nextjs
+.next/
+out/
