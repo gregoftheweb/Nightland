@@ -4,15 +4,16 @@ import { updateCombatDialogs } from './utils';
 export let roundNumber = 1;
 
 export function calculateTurnOrder(state, dispatch) {
-    const combatants = [state.player, ...state.attackSlots.map(slot => slot.monster).filter(m => m && m.hp > 0)];
+    const combatants = [state.player, ...state.attackSlots.filter(m => m && m.hp > 0)];
     const newTurnOrder = combatants.filter(c => c.hp > 0);
+    console.log('Calculating turn order:', newTurnOrder.map(t => t.name));
     dispatch({
         type: 'SET_COMBAT',
         payload: {
             inCombat: state.inCombat,
             attackSlots: state.attackSlots,
             turnOrder: newTurnOrder,
-            combatTurn: newTurnOrder[0],
+            combatTurn: newTurnOrder[0] || state.player,
             player: state.player,
             dialogData: state.dialogData
         }
@@ -20,20 +21,19 @@ export function calculateTurnOrder(state, dispatch) {
 }
 
 export function resolveRound(state, dispatch) {
-    const deadMonsters = state.attackSlots.filter(slot => slot.monster && slot.monster.hp <= 0);
+    const deadMonsters = state.attackSlots.filter(slot => slot.hp <= 0);
     if (deadMonsters.length > 0) {
         deadMonsters.forEach(slot => {
-            slot.monster.active = false;
+            slot.active = false;
             if (state.waitingMonsters.length > 0) {
                 const nextMonster = state.waitingMonsters.shift();
-                nextMonster.x = slot.position.x;
-                nextMonster.y = slot.position.y;
-                slot.monster = nextMonster;
+                nextMonster.slotPosition = slot.slotPosition;
+                Object.assign(slot, nextMonster);
             } else {
-                slot.monster = null;
+                slot.active = false;
             }
         });
-        const newAttackSlots = state.attackSlots.filter(s => s.monster && s.monster.hp > 0);
+        const newAttackSlots = state.attackSlots.filter(s => s.hp > 0);
         dispatch({
             type: 'SET_COMBAT',
             payload: {
@@ -46,19 +46,37 @@ export function resolveRound(state, dispatch) {
 }
 
 export function moveWaitingMonsters(state, dispatch) {
+    console.log('Waiting monsters before move:', state.waitingMonsters.map(m => `${m.id} at ${m.position.x}, ${m.position.y}`));
     const activeMonsters = state.activeMonsters.filter(m => m.active && m.hp > 0);
+    console.log('Active monsters:', activeMonsters.map(m => `${m.id} at ${m.position.x}, ${m.position.y}`));
     const allAttackSlotsFull = state.attackSlots.length >= state.maxAttackers;
+    console.log('All attack slots full:', allAttackSlotsFull, 'Max attackers:', state.maxAttackers);
     activeMonsters.forEach(monster => {
-        if (monster.hp > 0 && !state.attackSlots.some(slot => slot.monster === monster)) {
-            const dx = Math.abs(monster.x - state.player.x);
-            const dy = Math.abs(monster.y - state.player.y);
-            if (allAttackSlotsFull && (dx <= 2 || dy <= 2)) {
-                if (!state.waitingMonsters.includes(monster)) {
+        if (monster.hp > 0 && !state.attackSlots.some(slot => slot.id === monster.id)) {
+            const dx = Math.abs(monster.position.x - state.player.position.x);
+            const dy = Math.abs(monster.position.y - state.player.position.y);
+            console.log(`Monster ${monster.id} distance - dx: ${dx}, dy: ${dy}`);
+            if (allAttackSlotsFull && (dx <= 240 || dy <= 240)) { // Increased to 240px (6 tiles)
+                if (!state.waitingMonsters.some(m => m.id === monster.id)) {
                     dispatch({
                         type: 'UPDATE_WAITING_MONSTERS',
                         payload: { waitingMonsters: [...state.waitingMonsters, monster] }
                     });
+                    console.log(`Added ${monster.id} to waiting monsters at ${monster.position.x}, ${monster.position.y}`);
                 }
+            } else if (state.waitingMonsters.some(m => m.id === monster.id)) {
+                const moveDistance = (monster.moveRate || 1) * 40; // 1 tile per turn
+                let newPos = { ...monster.position };
+                if (monster.position.x < state.player.position.x) newPos.x += moveDistance;
+                else if (monster.position.x > state.player.position.x) newPos.x -= moveDistance;
+                if (monster.position.y < state.player.position.y) newPos.y += moveDistance;
+                else if (monster.position.y > state.player.position.y) newPos.y -= moveDistance;
+
+                newPos.x = Math.max(0, Math.min(1960, newPos.x));
+                newPos.y = Math.max(0, Math.min(1960, newPos.y));
+
+                dispatch({ type: 'MOVE_MONSTER', payload: { id: monster.id, position: newPos } });
+                console.log(`Moved waiting ${monster.id} to ${newPos.x}, ${newPos.y}`);
             }
         }
     });
@@ -81,12 +99,20 @@ export function endCombat(state, dispatch) {
 }
 
 export function combatStep(state, dispatch) {
-    if (!state.inCombat || !state.turnOrder.length) return;
+    if (!state.inCombat || !state.turnOrder.length) {
+        console.log('Combat step aborted: not in combat or no turn order');
+        return;
+    }
 
     const current = state.combatTurn;
-    const currentIndex = state.turnOrder.indexOf(current);
-    const activeMonsters = state.attackSlots.map(slot => slot.monster).filter(m => m && m.hp > 0);
-    let allMonsters = state.attackSlots.map(slot => slot.monster);
+    const currentIndex = state.turnOrder.findIndex(t => t.id === current.id);
+    if (currentIndex === -1) {
+        console.error('Current turn not found in turnOrder:', current);
+        return;
+    }
+
+    const activeMonsters = state.attackSlots.filter(m => m && m.hp > 0);
+    let allMonsters = state.attackSlots;
 
     console.log('Combat Step - Current:', current?.name, 'Turn Order:', state.turnOrder.map(t => t.name), 'Active Monsters:', activeMonsters.map(m => `${m.name} HP:${m.hp}`));
 
@@ -95,12 +121,9 @@ export function combatStep(state, dispatch) {
     let updatedPlayer = { ...state.player };
     let updatedAttackSlots = [...state.attackSlots];
 
-    console.log('Player Check - Current.name === state.player.name:', current.name === state.player.name, 'Current:', current, 'State.Player:', state.player);
-
     if (current.name === state.player.name) {
         const target = activeMonsters[0];
         console.log('Player Turn - Target:', target ? `${target.name} HP:${target.hp}` : 'None');
-        console.log('Active Monsters:', activeMonsters.map(m => `${m.name} HP:${m.hp}`));
         if (target) {
             if (Math.random() < 0.8) {
                 target.hp -= 6;
@@ -115,8 +138,8 @@ export function combatStep(state, dispatch) {
             playerComment = "No target available!";
             console.log('No Target Available');
         }
-    } else if (activeMonsters.includes(current)) {
-        const monsterIndex = allMonsters.indexOf(current);
+    } else if (activeMonsters.some(m => m.id === current.id)) {
+        const monsterIndex = allMonsters.findIndex(m => m.id === current.id);
         if (Math.random() < 0.5) {
             updatedPlayer.hp -= 4;
             enemyComments[monsterIndex] = "He hit you for 4 points!";
@@ -139,11 +162,13 @@ export function combatStep(state, dispatch) {
     } else if (activeMonsters.length === 0 && state.waitingMonsters.length === 0) {
         endCombat(state, dispatch);
     } else {
-        if (current === state.turnOrder[state.turnOrder.length - 1]) {
+        if (currentIndex === state.turnOrder.length - 1) {
             resolveRound(state, dispatch);
-            updatedAttackSlots = state.attackSlots.filter(s => s.monster && s.monster.hp > 0);
+            updatedAttackSlots = state.attackSlots.filter(s => s.hp > 0);
             calculateTurnOrder(state, dispatch);
             roundNumber++;
+            moveWaitingMonsters(state, dispatch);
+            console.log('End of round, waiting monsters moved:', state.waitingMonsters.map(m => m.id));
         }
 
         dispatch({
@@ -158,6 +183,5 @@ export function combatStep(state, dispatch) {
             }
         });
         console.log('After Dispatch - inCombat:', state.inCombat, 'Next Turn:', nextTurn?.name);
-        moveWaitingMonsters(state, dispatch);
     }
 }

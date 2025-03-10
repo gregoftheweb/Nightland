@@ -1,7 +1,7 @@
 // nightland/src/components/CombatUI.js
 import React, { useEffect, useState } from 'react';
 import Dialog from './Dialog';
-import { combatStep } from '../modules/combat';
+import { combatStep } from '../modules/combat'; // Updated import
 
 const CombatUI = ({ state, dispatch }) => {
     const [combatActive, setCombatActive] = useState(false);
