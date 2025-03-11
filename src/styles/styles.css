@@ -6,7 +6,7 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    overflow: hidden; /* Remove scrollbars on body/html */
+    overflow: hidden;
 }
 
 .app {
@@ -15,7 +15,7 @@ body, html {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Remove scrollbars on app */
+    overflow: hidden;
 }
 
 /* Splash Screen */
@@ -45,7 +45,7 @@ body, html {
     left: 50%;
     transform: translateX(-50%);
     width: 60%;
-    padding:5px;
+    padding: 5px;
     background-color: transparent;
     border: 2px solid #8B0000;
     color: #8B0000;
@@ -108,7 +108,7 @@ body, html {
     font-size: 14px;
 }
 
-/* Gameplay Screen - Use a fixed-size viewport without scrollbars */
+/* Gameplay Screen */
 #gameplay-screen {
     position: fixed;
     top: 0;
@@ -117,95 +117,77 @@ body, html {
     height: 100%;
     background-color: #000000;
     z-index: 800;
-    overflow: hidden; /* No scrollbars */
-    /* Add for debugging: */
-    outline: 1px solid red !important; /* Force outline to show */
+    overflow: hidden;
 }
 
-/* Game Board - Full game world, positioned relative for absolute children */
+/* Game Board - Matches 400x400 grid with 40px tiles */
 .game-board {
-    position: relative; /* Required for absolute positioning of child elements */
-    width: 2000px; /* Updated: 2000px wide */
-    height: 2000px; /* Updated: 2000px tall */
-    background-color: #000000;
-    z-index: 801; /* Ensure game board is above background */
-    /* Add for debugging: */
-    outline: 1px solid blue !important; /* Force outline to show */
+    position: relative;
+    width: 16000px; /* 400 * 40px */
+    height: 16000px; /* 400 * 40px */
+    z-index: 801;
 }
 
-/* Game Elements - Use absolute for movement, positioned dynamically */
+/* Game Elements - Use absolute for grid-based positioning */
 #player {
-    position: absolute; /* Use absolute for movement */
-    width: 40px; /* Ensure size */
-    height: 40px; /* Ensure size */
-    background: url('../../public/assets/images/player.png') no-repeat center center / cover; /* Use relative path (working) */
-    z-index: 804; /* Ensure player is on top of everything (highest z-index) */
-    transition: all 0.2s ease; /* For smooth movement */
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: url('../../public/assets/images/player.png') no-repeat center center / contain;
+    z-index: 804;
+    transition: all 0.2s ease;
     cursor: pointer;
-    visibility: visible !important; /* Force visible */
-    opacity: 1 !important; /* Force fully opaque */
-    /* Add for debugging: */
-    outline: 1px solid yellow !important; /* Force outline to show */
 }
-
 
 .abhuman {
     position: absolute;
     width: 40px;
     height: 40px;
-    background: url('../../public/assets/images/abhuman.png') no-repeat center center / contain; /* Changed to contain for visibility */
+    background: url('../../public/assets/images/abhuman.png') no-repeat center center / contain;
     z-index: 803;
     transition: all 0.2s ease;
-    visibility: visible !important;
-    opacity: 1 !important;
-    border: 2px solid red !important; /* Debugging: red border to see if it renders */
 }
 
 #redoubt {
-    position: absolute; /* Use absolute for movement */
-    width: 197px; /* Updated size to match new image */
-    height: 160px; /* Updated size to match new image */
-    background: url('../../public/assets/images/redoubt.png') no-repeat center center / cover; /* Use relative path (working) */
-    z-index: 802; /* Below player */
+    position: absolute;
+    width: 197px;
+    height: 160px;
+    background: url('../../public/assets/images/redoubt.png') no-repeat center center / cover;
+    z-index: 802;
     cursor: pointer;
-    visibility: visible !important; /* Force visible */
-    opacity: 1 !important; /* Force fully opaque */
-    /* Add for debugging: */
-    outline: 1px solid green !important; /* Force outline to show */
 }
 
-/* Status Bar - 25% smaller (width, height, font size) */
+/* Status Bar */
 #status-bar {
     display: flex;
     position: fixed;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 225px; /* 25% smaller (300px * 0.75) */
-    height: 30px; /* 25% smaller (40px * 0.75, adjusted for padding) */
+    width: 225px;
+    height: 30px;
     background: transparent;
     color: #8B0000;
     border: 2px solid #8B0000;
-    padding: 3.75px 7.5px; /* 25% smaller (5px 10px * 0.75) */
+    padding: 3.75px 7.5px;
     font-family: monospace;
-    font-size: 12.5px; /* Increased by 2pts from 10.5px */
-    z-index: 805; /* Above player and redoubt */
-    justify-content: space-between; /* Ensure space between HP and gear icon */
+    font-size: 12.5px;
+    z-index: 805;
+    justify-content: space-between;
     align-items: center;
 }
 
-/* Gear Icon - Aligned right in status bar */
+/* Gear Icon */
 #gear-icon {
-    width: 15px; /* 25% smaller (20px * 0.75) */
-    height: 15px; /* 25% smaller (20px * 0.75) */
+    width: 15px;
+    height: 15px;
     cursor: pointer;
-    margin-left: auto; /* Align right within flex container */
-    display: block; /* Ensure visibility */
-    /* Change black SVG to red using filter (assuming /assets/images/gear.svg is black) */
+    margin-left: auto;
+    display: block;
     filter: invert(21%) sepia(93%) saturate(7426%) hue-rotate(359deg) brightness(102%) contrast(107%);
 }
 
-/* Combat UI Elements (unchanged for now) */
+/* Combat UI Elements */
 #test-damage, #start-combat {
     position: absolute;
     bottom: 60px;
@@ -222,27 +204,30 @@ body, html {
 #test-damage { left: 10px; }
 #start-combat { left: 170px; }
 
+/* Combat Dialogs - Updated to support grid or fixed positioning */
+.combat {
+    position: absolute;
+    z-index: 10;
+}
+
 .combat-player, .combat-enemy-1, .combat-enemy-2, .combat-enemy-3, .combat-enemy-4 {
-    display: block;
-    position: fixed;
-    right: 10px;
+    position: absolute;
     width: 200px;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.7);
     color: #8B0000;
     border: 2px solid #8B0000;
     padding: 5px 10px;
     font-family: monospace;
     font-size: 14px;
     z-index: 10;
-    min-height: 60px;
+    line-height: 1.2;
     white-space: pre-wrap;
 }
 
-.combat-player { top: 20%; }
-.combat-enemy-1 { top: 40%; }
-.combat-enemy-2 { top: 55%; }
-.combat-enemy-3 { top: 70%; }
-.combat-enemy-4 { top: 85%; }
+.dead {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
 
 .flicker {
     animation: flicker 0.5s ease-in-out;
@@ -252,11 +237,6 @@ body, html {
     0% { opacity: 1; }
     50% { opacity: 0; }
     100% { opacity: 1; }
-}
-
-.combat-enemy-1.dead, .combat-enemy-2.dead, .combat-enemy-3.dead, .combat-enemy-4.dead {
-    color: #FF0000 !important;
-    border-color: #FF0000 !important;
 }
 
 .background-audio {
