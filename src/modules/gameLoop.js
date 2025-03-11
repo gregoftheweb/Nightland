@@ -1,5 +1,6 @@
 // nightland/src/modules/gameLoop.js
 export const handleMovePlayer = (state, dispatch, key, showDialog) => {
+    console.log("handleMovePlayer called - inCombat:", state.inCombat, "key:", key);
     if (state.inCombat) {
         showDialog("You are in combat! Press Spacebar to proceed.");
         return;
@@ -18,14 +19,24 @@ export const handleMovePlayer = (state, dispatch, key, showDialog) => {
     showDialog(`Player moved ${key.toLowerCase().replace('arrow', '')}`);
 
     const newMoveCount = state.moveCount + 1;
+    console.log("Updating moveCount to:", newMoveCount);
     dispatch({ type: 'UPDATE_MOVE_COUNT', payload: { moveCount: newMoveCount } });
     checkMonsterSpawn(state, dispatch, showDialog);
-    moveMonsters(state, dispatch, showDialog);
+    moveMonsters(state, dispatch, showDialog, newPosition);
 };
 
-const checkMonsterSpawn = (state, dispatch, showDialog) => {
+export const checkMonsterSpawn = (state, dispatch, showDialog) => {
     const abhumanTemplate = state.monsters.find(m => m.name === "Abhuman");
-    if (!abhumanTemplate || state.activeMonsters.length >= abhumanTemplate.maxInstances) return;
+    if (!abhumanTemplate) {
+        console.warn("Abhuman template not found in state.monsters");
+        return;
+    }
+
+    console.log("checkMonsterSpawn called - moveCount:", state.moveCount, "activeMonsters.length:", state.activeMonsters.length, "maxInstances:", abhumanTemplate.maxInstances);
+    if (state.activeMonsters.length >= abhumanTemplate.maxInstances) {
+        console.log("Max instances reached, no spawn. activeMonsters:", state.activeMonsters.map(m => m.id));
+        return;
+    }
 
     if ((state.moveCount + 1) % abhumanTemplate.spawnRate === 0 && Math.random() < abhumanTemplate.spawnChance) {
         const spawnPosition = getSpawnPosition(state.player.position);
@@ -38,6 +49,9 @@ const checkMonsterSpawn = (state, dispatch, showDialog) => {
         };
         dispatch({ type: 'SPAWN_MONSTER', payload: { monster: newMonster } });
         showDialog(`An Abhuman has spawned at row ${spawnPosition.row}, col ${spawnPosition.col}!`);
+        console.log("Spawned new monster:", newMonster);
+    } else {
+        console.log("Spawn conditions not met - moveCount+1:", state.moveCount + 1, "spawnRate:", abhumanTemplate.spawnRate, "random:", Math.random(), "chance:", abhumanTemplate.spawnChance);
     }
 };
 
@@ -56,8 +70,13 @@ const getSpawnPosition = (playerPosition) => {
     return { row: spawnRow, col: spawnCol };
 };
 
-export const moveMonsters = (state, dispatch, showDialog) => {
-    if (state.inCombat) return;
+export const moveMonsters = (state, dispatch, showDialog, playerPosOverride) => {
+    if (state.inCombat) {
+        console.log("moveMonsters skipped due to inCombat:", state.inCombat);
+        return;
+    }
+
+    const playerPos = playerPosOverride || state.player.position;
 
     state.activeMonsters.forEach(monster => {
         if (state.attackSlots.some(slot => slot.id === monster.id) || state.waitingMonsters.some(m => m.id === monster.id)) {
@@ -65,7 +84,6 @@ export const moveMonsters = (state, dispatch, showDialog) => {
         }
 
         const moveDistance = monster.moveRate;
-        const playerPos = state.player.position;
         let newPos = { ...monster.position };
 
         if (monster.position.row < playerPos.row) newPos.row = Math.min(monster.position.row + moveDistance, playerPos.row);
@@ -77,7 +95,7 @@ export const moveMonsters = (state, dispatch, showDialog) => {
         newPos.col = Math.max(0, Math.min(state.gridWidth - 1, newPos.col));
 
         if (checkCollision(newPos, playerPos)) {
-            setupCombat(state, dispatch, monster, showDialog);
+            setupCombat(state, dispatch, monster, showDialog, playerPos);
         } else {
             if (state.attackSlots.length >= state.maxAttackers) {
                 const distance = Math.sqrt(
@@ -103,12 +121,10 @@ const checkCollision = (monsterPos, playerPos) => {
     return monsterPos.row === playerPos.row && monsterPos.col === playerPos.col;
 };
 
-
-
-const setupCombat = (state, dispatch, monster, showDialog) => {
+const setupCombat = (state, dispatch, monster, showDialog, playerPosOverride) => {
     if (state.inCombat) return;
 
-    const playerPos = state.player.position;
+    const playerPos = playerPosOverride || state.player.position;
     let newAttackSlots = [...state.attackSlots];
     let newWaitingMonsters = [...state.waitingMonsters];
 
@@ -155,7 +171,6 @@ const setupCombat = (state, dispatch, monster, showDialog) => {
 
     showDialog(`Combat initiated with ${monster.name}! Press Spacebar to proceed.`);
 };
-
 
 export const handleMoveMonster = (state, dispatch, monsterId, direction) => {
     const monster = state.activeMonsters.find(m => m.id === monsterId);
