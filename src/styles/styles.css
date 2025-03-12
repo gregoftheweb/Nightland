@@ -242,3 +242,57 @@ body, html {
 .background-audio {
     display: none;
 }
+
+/* Combat UI */
+.combat-ui {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #8B0000;
+    padding: 20px;
+    border: 2px solid #8B0000;
+    border-radius: 5px;
+    z-index: 1000;
+    font-family: monospace;
+}
+
+.combatants {
+    display: grid;
+    grid-template-areas: 
+        "slot1 slot2"
+        "slot3 slot4";
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.combatant-slot {
+    border: 1px solid #8B0000;
+    padding: 10px;
+    background: #333;
+    color: #8B0000;
+    font-size: 14px;
+    /* Remove abhuman.png from combat UI to avoid overlap */
+    background-image: none;
+}
+
+.slot-1 { grid-area: slot1; }
+.slot-2 { grid-area: slot2; }
+.slot-3 { grid-area: slot3; }
+.slot-4 { grid-area: slot4; }
+
+.combat-ui button {
+    margin-right: 10px;
+    padding: 5px 10px;
+    background: #555;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.combat-ui button:hover {
+    background: #777;
+}

@@ -1,6 +1,6 @@
 // nightland/src/modules/gameLoop.js
 export const handleMovePlayer = (state, dispatch, key, showDialog) => {
-    console.log("handleMovePlayer called - inCombat:", state.inCombat, "key:", key);
+  
     if (state.inCombat) {
         showDialog("You are in combat! Press Spacebar to proceed.");
         return;
@@ -32,9 +32,8 @@ export const checkMonsterSpawn = (state, dispatch, showDialog) => {
         return;
     }
 
-    console.log("checkMonsterSpawn called - moveCount:", state.moveCount, "activeMonsters.length:", state.activeMonsters.length, "maxInstances:", abhumanTemplate.maxInstances);
-    if (state.activeMonsters.length >= abhumanTemplate.maxInstances) {
-        console.log("Max instances reached, no spawn. activeMonsters:", state.activeMonsters.map(m => m.id));
+   if (state.activeMonsters.length >= abhumanTemplate.maxInstances) {
+        // Max instances reached, no spawn. 
         return;
     }
 
@@ -49,9 +48,9 @@ export const checkMonsterSpawn = (state, dispatch, showDialog) => {
         };
         dispatch({ type: 'SPAWN_MONSTER', payload: { monster: newMonster } });
         showDialog(`An Abhuman has spawned at row ${spawnPosition.row}, col ${spawnPosition.col}!`);
-        console.log("Spawned new monster:", newMonster);
+       
     } else {
-        console.log("Spawn conditions not met - moveCount+1:", state.moveCount + 1, "spawnRate:", abhumanTemplate.spawnRate, "random:", Math.random(), "chance:", abhumanTemplate.spawnChance);
+       //Spawn conditions not met 
     }
 };
 
@@ -72,7 +71,7 @@ const getSpawnPosition = (playerPosition) => {
 
 export const moveMonsters = (state, dispatch, showDialog, playerPosOverride) => {
     if (state.inCombat) {
-        console.log("moveMonsters skipped due to inCombat:", state.inCombat);
+       //moveMonsters skipped due to inCombat
         return;
     }
 

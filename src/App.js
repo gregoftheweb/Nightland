@@ -18,12 +18,10 @@ const App = () => {
     const [dialogMessage, setDialogMessage] = useState('');
     const gameContainerRef = useRef(null);
 
-    // Debug: Log state changes to catch undefined state
+    // Remove debug logging
     useEffect(() => {
-        if (!state) {
-            console.error("App.js: State is undefined after update");
-        }
-        console.log("App.js: State updated:", state);
+        // Removed: console.error("App.js: State is undefined after update");
+        // Removed: console.log("App.js: State updated:", state);
     }, [state]);
 
     const handleStartGame = () => setPhase('princess');
@@ -95,7 +93,6 @@ const App = () => {
                                     x: monster.position.col * state.tileSize,
                                     y: monster.position.row * state.tileSize
                                 };
-                                console.log(`Rendering ${monster.id} at row ${monster.position.row}, col ${monster.position.col} (pixels: ${renderPos.x}, ${renderPos.y})`);
                                 return (
                                     <div
                                         key={monster.id}
