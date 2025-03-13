@@ -209,7 +209,12 @@ body, html {
     position: absolute;
     z-index: 10;
 }
-
+/* nightland/src/styles/styles.css */
+.combat-slot {
+    border: 1px solid #ff0000; /* Visual cue for combat slots */
+    z-index: 1000; /* Above other elements */
+  }
+  
 .combat-player, .combat-enemy-1, .combat-enemy-2, .combat-enemy-3, .combat-enemy-4 {
     position: absolute;
     width: 200px;
@@ -250,17 +255,47 @@ body, html {
     z-index: 1000;
 }
 
-/* Combat Dialog - Fixed positioning relative to viewport */
+/* Existing Combat Dialog Style (for reference) */
 .combat-dialog {
-    position: fixed; /* Fixed to viewport */
-    right: 20px; /* Right side of screen */
-    top: 50%; /* Midway vertically */
-    transform: translateY(-50%); /* Center vertically */
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 150px;
     background-color: rgba(0, 0, 0, 0.7);
     border: 2px solid #8B0000;
     padding: 8px;
     color: #8B0000;
     font-family: Arial, sans-serif;
-    z-index: 1001; /* Above other elements */
+    z-index: 1001;
+}
+
+.death-dialog {
+    position: fixed;
+    right: 20px;
+    top: 50%; /* Start at the same position as CombatDialog */
+    width: 150px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #ff0000; /* Bright red border */
+    padding: 8px;
+    color: #ff0000; /* Bright red text */
+    font-family: Arial, sans-serif;
+    z-index: 1002; /* Above combat dialog */
+    text-align: center;
+}
+
+/* Fade and Drift Animation */
+.fade-out {
+    animation: fadeAndDrift 2s ease-in-out forwards;
+}
+
+@keyframes fadeAndDrift {
+    0% { 
+        opacity: 1; 
+        transform: translateY(-50%); /* Start centered vertically */
+    }
+    100% { 
+        opacity: 0; 
+        transform: translateY(50px); /* Drift down 50px */
+    }
 }

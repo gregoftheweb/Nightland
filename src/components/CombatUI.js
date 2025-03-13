@@ -1,34 +1,60 @@
 // nightland/src/components/CombatUI.js
-import React, { useState, useEffect } from 'react';
-import CombatDialog from './CombatDialog';
-import { combatStep } from '../modules/combat';
+import React, { useState, useEffect } from "react";
+import CombatDialog from "./CombatDialog";
+import DeathDialog from "./DeathDialog";
+import { combatStep } from "../modules/combat";
 
 const CombatUI = ({ state, dispatch, onCombatStep }) => {
   const [lastAction, setLastAction] = useState(null);
+  const [deathAction, setDeathAction] = useState(null);
 
   useEffect(() => {
     if (state && state.attackSlots) {
-      console.log("CombatUI attackSlots:", state.attackSlots.map(m => `${m.name} (HP: ${m.hp})`));
+      //console.log("CombatUI attackSlots:", state.attackSlots.map(m => `${m.name} (HP: ${m.hp})`));
     }
   }, [state?.attackSlots]);
 
   useEffect(() => {
-    // Expose the combat step function to the parent (App.js)
     onCombatStep(() => {
-      if (state.inCombat) {
-        combatStep(state, dispatch, setLastAction);
-      }
+      const preUpdateSlotsLength = state.attackSlots.length;
+      combatStep(state, dispatch, (action) => {
+        setLastAction(action);
+
+        if (action.type === "ENEMY_DEATH" && preUpdateSlotsLength > 1) {
+          setDeathAction(action);
+
+          // Auto-advance turn after multi-monster death
+          if (state.inCombat) {
+            setTimeout(() => {
+              setLastAction(null); // Clear lastAction to allow next step
+            }, 2000); // Match DeathDialog duration
+          }
+        } else if (action.type === "PLAYER_DEATH") {
+          setDeathAction(action);
+        }
+      });
     });
   }, [state, dispatch, onCombatStep]);
 
   if (!state) {
-    console.warn("CombatUI: state is undefined");
     return null;
   }
 
+  const shouldShowCombatDialog = state.inCombat || lastAction;
+
   return (
     <div className="combat-ui">
-      <CombatDialog state={state} lastAction={lastAction} />
+      {shouldShowCombatDialog && (
+        <CombatDialog state={state} lastAction={lastAction} />
+      )}
+      {deathAction && (
+        <DeathDialog
+          deathAction={deathAction}
+          onClose={() => {
+            setDeathAction(null);
+          }}
+        />
+      )}
     </div>
   );
 };

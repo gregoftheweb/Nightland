@@ -1,50 +1,48 @@
 // nightland/src/components/CombatDialog.js
-import React from 'react';
-import { 
+import React from "react";
+import {
   combatVictoryPlayerComment,
   combatVictoryEnemyComment,
-  combatDeathPlayerComment,
-  combatDeathEnemyComment,
   combatPlayerHitComment,
   combatPlayerMissComment,
   combatEnemyHitComment,
   combatEnemyMissComment,
-  combatStartPlayerComment
-} from '../../src/assets/copy/textcontent';
+  combatStartPlayerComment,
+} from "../../src/assets/copy/textcontent";
 
 const CombatDialog = ({ state, lastAction }) => {
-  if (!state?.inCombat || !state?.player) return null;
+  if (!state?.player || (!state.inCombat && !lastAction)) {
+    return null;
+  }
 
   const getActionText = () => {
     if (!lastAction) return combatStartPlayerComment;
-    
+
     switch (lastAction.type) {
-      case 'PLAYER_HIT':
-        return `${combatPlayerHitComment.replace('6', lastAction.damage)}`;
-      case 'PLAYER_MISS':
+      case "PLAYER_HIT":
+        return `${combatPlayerHitComment.replace("6", lastAction.damage)}`;
+      case "PLAYER_MISS":
         return combatPlayerMissComment;
-      case 'ENEMY_HIT':
-        return `${combatEnemyHitComment.replace('4', lastAction.damage)}`;
-      case 'ENEMY_MISS':
+      case "ENEMY_HIT":
+        return `${combatEnemyHitComment.replace("4", lastAction.damage)}`;
+      case "ENEMY_MISS":
         return combatEnemyMissComment;
-      case 'PLAYER_VICTORY':
+      case "PLAYER_VICTORY":
         return combatVictoryPlayerComment;
-      case 'ENEMY_VICTORY':
+      case "ENEMY_VICTORY":
         return combatVictoryEnemyComment;
-      case 'PLAYER_DEATH':
-        return combatDeathPlayerComment;
-      case 'ENEMY_DEATH':
-        return combatDeathEnemyComment;
       default:
-        return lastAction.message || '';
+        return lastAction.message || "";
     }
   };
+
+  const actionText = getActionText();
 
   return (
     <div className="combat-dialog">
       <p>Christos</p>
       <p>HP: {state.player.hp}</p>
-      <p>{getActionText()}</p>
+      <p>{actionText}</p>
     </div>
   );
 };
