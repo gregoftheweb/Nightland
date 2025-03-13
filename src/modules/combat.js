@@ -1,5 +1,5 @@
 // nightland/src/modules/combat.js
-import { moveMonsters, checkMonsterSpawn } from './gameLoop'; // Adjust path if needed
+import { moveMonsters, checkMonsterSpawn } from './gameLoop';
 
 export const combatStep = (state, dispatch, setLastAction = () => {}) => {
     let newTurnOrder = [state.player, ...state.attackSlots];
@@ -13,16 +13,15 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
         console.log("Christos' turn triggered");
         const target = newAttackSlots[0];
         if (target) {
-            const damage = Math.floor(Math.random() * 20) + 5; // Adjusted for testing (5-24)
+            const damage = Math.floor(Math.random() * 20) + 5;
             const newHP = Math.max(0, target.hp - damage);
             
             if (damage > 1) {
                 setLastAction({ type: 'PLAYER_HIT', damage });
                 console.log(`${state.player.name} hits ${target.name} in slot 1 for ${damage} points`);
                 if (newHP <= 0) {
-                    // Increase delay to 1500ms (1.5 seconds) for visibility
-                    setTimeout(() => setLastAction({ type: 'ENEMY_DEATH' }), 1500);
-                    console.log(`${target.name} dies`);
+                    console.log(`${target.name} dies - Setting ENEMY_DEATH`);
+                    setLastAction({ type: 'ENEMY_DEATH' });
                 }
             } else {
                 setLastAction({ type: 'PLAYER_MISS' });
@@ -87,6 +86,7 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
     }
 
     const combatContinues = newAttackSlots.length > 0;
+    console.log("Combat continues:", combatContinues, "New attackSlots length:", newAttackSlots.length);
 
     const { updatedAttackSlots, updatedWaitingMonsters } = moveWaitingMonsters(state, dispatch, newAttackSlots, newWaitingMonsters);
     newAttackSlots = updatedAttackSlots;

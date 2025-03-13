@@ -13,7 +13,7 @@ import {
 } from '../../src/assets/copy/textcontent';
 
 const CombatDialog = ({ state, lastAction }) => {
-  if (!state?.inCombat || !state?.player) return null;
+  if (!state?.player || (!state.inCombat && !lastAction)) return null;
 
   const getActionText = () => {
     if (!lastAction) return combatStartPlayerComment;
@@ -40,11 +40,14 @@ const CombatDialog = ({ state, lastAction }) => {
     }
   };
 
+  const actionText = getActionText();
+  console.log("CombatDialog: Rendering with lastAction:", lastAction, "Text:", actionText);
+
   return (
     <div className="combat-dialog">
       <p>Christos</p>
       <p>HP: {state.player.hp}</p>
-      <p>{getActionText()}</p>
+      <p>{actionText}</p>
     </div>
   );
 };
