@@ -1,59 +1,36 @@
 // nightland/src/components/CombatUI.js
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import CombatDialog from './CombatDialog';
 import { combatStep } from '../modules/combat';
 
-const CombatUI = ({ state, dispatch }) => {
-    useEffect(() => {
-        if (state && state.attackSlots) {
-            console.log("CombatUI attackSlots:", state.attackSlots.map(m => `${m.name} (HP: ${m.hp})`));
-        }
-    }, [state?.attackSlots]);
+const CombatUI = ({ state, dispatch, onCombatStep }) => {
+  const [lastAction, setLastAction] = useState(null);
 
-    if (!state) {
-        console.warn("CombatUI: state is undefined");
-        return null;
+  useEffect(() => {
+    if (state && state.attackSlots) {
+      console.log("CombatUI attackSlots:", state.attackSlots.map(m => `${m.name} (HP: ${m.hp})`));
     }
+  }, [state?.attackSlots]);
 
-    const handleNextTurn = () => {
-        if (state.inCombat) {
-            combatStep(state, dispatch);
-        }
-    };
+  useEffect(() => {
+    // Expose the combat step function to the parent (App.js)
+    onCombatStep(() => {
+      if (state.inCombat) {
+        combatStep(state, dispatch, setLastAction);
+      }
+    });
+  }, [state, dispatch, onCombatStep]);
 
-    return (
-        <div className="combat-ui">
-            <h2>Combat</h2>
-            <div className="combatants">
-                {state.attackSlots.map((monster, index) => (
-                    monster.hp > 0 ? (
-                        <div
-                            key={monster.id}
-                            className={`combatant-slot slot-${index + 1}`}
-                        >
-                            <span>{monster.name} (HP: {monster.hp}) - Slot {index + 1}</span>
-                        </div>
-                    ) : null
-                ))}
-            </div>
+  if (!state) {
+    console.warn("CombatUI: state is undefined");
+    return null;
+  }
 
-            <button id="test-damage" onClick={() => {
-                if (!state.player) {
-                    console.warn("CombatUI: state.player is undefined, cannot apply damage");
-                    return;
-                }
-                const damage = Math.floor(Math.random() * 10) + 1;
-                dispatch({ type: 'UPDATE_PLAYER_HP', payload: { hp: Math.max(0, state.player.hp - damage) } });
-            }}>
-                Test Damage
-            </button>
-            <button id="start-combat" onClick={() => dispatch({ type: 'SET_COMBAT', payload: { inCombat: false } })}>
-                End Combat
-            </button>
-            <button id="next-turn" onClick={handleNextTurn}>
-                Next Turn (Spacebar)
-            </button>
-        </div>
-    );
+  return (
+    <div className="combat-ui">
+      <CombatDialog state={state} lastAction={lastAction} />
+    </div>
+  );
 };
 
 export default CombatUI;

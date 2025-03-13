@@ -7,7 +7,6 @@ import StatusBar from './components/StatusBar';
 import CombatUI from './components/CombatUI';
 import GameDialog from './components/GameDialog';
 import { handleMovePlayer } from './modules/gameLoop';
-import { combatStep } from './modules/combat';
 import { initializeEntityStyles, updateViewport } from './modules/utils';
 import './styles/styles.css';
 
@@ -17,8 +16,8 @@ const App = () => {
     const [showSettings, setShowSettings] = useState(false);
     const [dialogMessage, setDialogMessage] = useState('');
     const gameContainerRef = useRef(null);
+    const combatStepRef = useRef(null); // Ref to hold the combat step function
 
-    // Remove debug logging
     useEffect(() => {
         // Removed: console.error("App.js: State is undefined after update");
         // Removed: console.log("App.js: State updated:", state);
@@ -44,7 +43,10 @@ const App = () => {
                     handleMovePlayer(state, dispatch, event.key, showDialog);
                     updateViewport(state);
                 } else if (event.key === ' ' && state.inCombat) {
-                    combatStep(state, dispatch);
+                    // Call the combat step function from CombatUI
+                    if (combatStepRef.current) {
+                        combatStepRef.current();
+                    }
                 }
             }
         };
@@ -110,7 +112,13 @@ const App = () => {
                             })}
                         </div>
                         <StatusBar hp={state.player.hp} onSettingsToggle={toggleSettings} />
-                        {state.inCombat && <CombatUI state={state} dispatch={dispatch} />}
+                        {state.inCombat && (
+                            <CombatUI 
+                                state={state} 
+                                dispatch={dispatch} 
+                                onCombatStep={(stepFn) => (combatStepRef.current = stepFn)} 
+                            />
+                        )}
                     </div>
                     <GameDialog message={dialogMessage} />
                     <audio id="background-audio" loop autoPlay>

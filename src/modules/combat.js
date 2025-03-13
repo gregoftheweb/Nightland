@@ -1,7 +1,7 @@
 // nightland/src/modules/combat.js
 import { moveMonsters, checkMonsterSpawn } from './gameLoop'; // Adjust path if needed
 
-export const combatStep = (state, dispatch) => {
+export const combatStep = (state, dispatch, setLastAction = () => {}) => {
     let newTurnOrder = [state.player, ...state.attackSlots];
     let newCombatTurn = state.combatTurn;
     let newAttackSlots = [...state.attackSlots];
@@ -15,15 +15,21 @@ export const combatStep = (state, dispatch) => {
         if (target) {
             const damage = Math.floor(Math.random() * 20) + 5; // Adjusted for testing (5-24)
             const newHP = Math.max(0, target.hp - damage);
+            
             if (damage > 1) {
+                setLastAction({ type: 'PLAYER_HIT', damage });
                 console.log(`${state.player.name} hits ${target.name} in slot 1 for ${damage} points`);
+                if (newHP <= 0) {
+                    // Increase delay to 1500ms (1.5 seconds) for visibility
+                    setTimeout(() => setLastAction({ type: 'ENEMY_DEATH' }), 1500);
+                    console.log(`${target.name} dies`);
+                }
             } else {
+                setLastAction({ type: 'PLAYER_MISS' });
                 console.log(`${state.player.name} misses ${target.name} in slot 1`);
             }
             console.log(`${target.name} hp: ${newHP}`);
-            if (newHP <= 0) {
-                console.log(`${target.name} dies`);
-            }
+            
             newAttackSlots = newAttackSlots.map(slot =>
                 slot.id === target.id ? { ...slot, hp: newHP } : slot
             );
@@ -35,9 +41,15 @@ export const combatStep = (state, dispatch) => {
         if (enemy && enemy.hp > 0) {
             const damage = Math.floor(Math.random() * enemy.attack) + 1;
             const newPlayerHP = Math.max(0, state.player.hp - damage);
+            
             if (damage > 1) {
+                setLastAction({ type: 'ENEMY_HIT', damage });
                 console.log(`${enemy.name} hits ${state.player.name} for ${damage} points`);
+                if (newPlayerHP <= 0) {
+                    setTimeout(() => setLastAction({ type: 'PLAYER_DEATH' }), 100);
+                }
             } else {
+                setLastAction({ type: 'ENEMY_MISS' });
                 console.log(`${enemy.name} misses ${state.player.name}`);
             }
             console.log(`${state.player.name} at ${newPlayerHP} hp`);
@@ -101,6 +113,8 @@ export const combatStep = (state, dispatch) => {
         moveMonsters({ ...state, attackSlots: newAttackSlots, waitingMonsters: newWaitingMonsters, inCombat: false }, dispatch, showDialog);
     }
 };
+
+// [Rest of the file - moveWaitingMonsters and resetChristos - remains unchanged]
 
 const moveWaitingMonsters = (state, dispatch, attackSlots, waitingMonsters) => {
     if (!waitingMonsters || !Array.isArray(waitingMonsters)) {
