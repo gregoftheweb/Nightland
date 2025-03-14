@@ -1,16 +1,19 @@
 // nightland/src/components/StatusBar.js
-import React from 'react';
+import React from "react";
+import "../styles/styles.css";
 
-const StatusBar = ({ hp, onSettingsToggle }) => (
+const StatusBar = ({ hp, onSettingsToggle }) => {
+  return (
     <div id="status-bar">
-        <span id="hp-display">HP: {hp}</span>
-        <img
-            id="gear-icon"
+      <span>HP: {hp}</span>
+      <img
+        id="gear-icon"
             src="/assets/images/gear.svg" // Use local path
-            alt="Settings"
-            onClick={onSettingsToggle}
-        />
+        alt="Settings"
+        onClick={onSettingsToggle}
+      />
     </div>
-);
+  );
+};
 
 export default StatusBar;

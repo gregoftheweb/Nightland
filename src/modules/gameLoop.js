@@ -1,7 +1,7 @@
 // nightland/src/modules/gameLoop.js
 export const handleMovePlayer = (state, dispatch, key, showDialog) => {
   if (state.inCombat) {
-    showDialog("You are in combat! Press Spacebar to proceed.");
+   // showDialog("You are in combat! Press Spacebar to proceed.");
     return;
   }
 
@@ -24,7 +24,7 @@ export const handleMovePlayer = (state, dispatch, key, showDialog) => {
   }
 
   dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
-  showDialog(`Player moved ${key.toLowerCase().replace("arrow", "")}`);
+  //showDialog(`Player moved ${key.toLowerCase().replace("arrow", "")}`);
 
   const newMoveCount = state.moveCount + 1;
 
@@ -57,9 +57,9 @@ export const checkMonsterSpawn = (state, dispatch, showDialog) => {
       hp: 20,
     };
     dispatch({ type: "SPAWN_MONSTER", payload: { monster: newMonster } });
-    showDialog(
-      `An Abhuman has spawned at row ${spawnPosition.row}, col ${spawnPosition.col}!`
-    );
+   // showDialog(
+    //  `An Abhuman has spawned at row ${spawnPosition.row}, col ${spawnPosition.col}!`
+   // );
   } else {
     //Spawn conditions not met
   }
@@ -212,9 +212,7 @@ const setupCombat = (
     payload: { activeMonsters: updatedActiveMonsters },
   });
 
-  showDialog(
-    `Combat initiated with ${monster.name}! Press Spacebar to proceed.`
-  );
+ 
 };
 
 export const handleMoveMonster = (state, dispatch, monsterId, direction) => {

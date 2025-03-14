@@ -13,6 +13,8 @@ import StatusBar from "./components/StatusBar";
 import CombatUI from "./components/CombatUI";
 import DeathDialog from "./components/DeathDialog";
 import GameDialog from "./components/GameDialog";
+import Dialog from "./components/Dialog";
+import SettingsMenu from "./components/SettingsMenu"; // Import SettingsMenu
 import { handleMovePlayer } from "./modules/gameLoop";
 import { initializeEntityStyles, updateViewport } from "./modules/utils";
 import "./styles/styles.css";
@@ -23,8 +25,11 @@ const App = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [soloDeathAction, setSoloDeathAction] = useState(null);
+  const [deathMessage, setDeathMessage] = useState("");
+  const [sfxEnabled, setSfxEnabled] = useState(true); // New state for SFX toggle
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
+  const audioRef = useRef(null); // Ref for audio element
 
   useEffect(() => {
     if (!state.inCombat && state.attackSlots.length === 0 && state.combatTurn) {
@@ -36,11 +41,22 @@ const App = () => {
     }
   }, [state.inCombat, state.attackSlots.length, state.combatTurn]);
 
+  // Control audio playback based on sfxEnabled
+  useEffect(() => {
+    if (audioRef.current) {
+      if (sfxEnabled) {
+        audioRef.current.play().catch((error) => console.log("Audio play error:", error));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [sfxEnabled]);
+
   const handleStartGame = () => setPhase("princess");
   const handlePrincessNext = () => setPhase("gameplay");
   const toggleSettings = (e) => {
     e.stopPropagation();
-    setShowSettings(!showSettings);
+    setShowSettings(!showSettings); // Toggle settings menu visibility
   };
 
   const showDialog = useCallback((message, duration = 3600) => {
@@ -83,13 +99,13 @@ const App = () => {
     const centerY = state.player.position.row * tileSize;
     switch (uiSlot) {
       case 0:
-        return { left: centerX - tileSize, top: centerY - tileSize }; // Top-left
+        return { left: centerX - tileSize, top: centerY - tileSize };
       case 1:
-        return { left: centerX + tileSize, top: centerY - tileSize }; // Top-right
+        return { left: centerX + tileSize, top: centerY - tileSize };
       case 2:
-        return { left: centerX - tileSize, top: centerY + tileSize }; // Bottom-left
+        return { left: centerX - tileSize, top: centerY + tileSize };
       case 3:
-        return { left: centerX + tileSize, top: centerY + tileSize }; // Bottom-right
+        return { left: centerX + tileSize, top: centerY + tileSize };
       default:
         return { left: centerX, top: centerY };
     }
@@ -166,12 +182,22 @@ const App = () => {
                   );
                 })}
             </div>
-            <StatusBar hp={state.player.hp} onSettingsToggle={toggleSettings} />
+            <StatusBar
+              hp={state.player.hp}
+              onSettingsToggle={toggleSettings} // Pass toggle function
+            />
+            {showSettings && (
+              <SettingsMenu
+                sfxEnabled={sfxEnabled}
+                onSfxToggle={() => setSfxEnabled(!sfxEnabled)} // Pass SFX toggle
+              />
+            )}
             {state.inCombat && (
               <CombatUI
                 state={state}
                 dispatch={dispatch}
                 onCombatStep={(stepFn) => (combatStepRef.current = stepFn)}
+                onPlayerDeath={(message) => setDeathMessage(message)}
               />
             )}
             {soloDeathAction && (
@@ -182,7 +208,13 @@ const App = () => {
             )}
           </div>
           <GameDialog message={dialogMessage} />
-          <audio id="background-audio" loop autoPlay>
+          <Dialog message={deathMessage} onClose={() => setDeathMessage("")} />
+          <audio
+            id="background-audio"
+            loop
+            ref={audioRef} // Add ref to control audio
+            autoPlay={sfxEnabled} // Respect initial SFX setting
+          >
             <source
               src="/assets/sounds/ambient-background.wav"
               type="audio/wav"

@@ -187,6 +187,41 @@ body, html {
     filter: invert(21%) sepia(93%) saturate(7426%) hue-rotate(359deg) brightness(102%) contrast(107%);
 }
 
+/* Settings Menu */
+#settings-menu {
+    position: fixed;
+    bottom: 34px; /* Just above status bar (30px height + 4px gap) */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 225px; /* Match status bar width */
+    height: 30px; /* Match status bar height */
+    background: rgba(41, 40, 40, 0.75); /* Gray with 75% transparency */
+    border: 2px solid #8B0000; /* Red border */
+    color: #8B0000;
+    padding: 3.75px 7.5px; /* Match status bar padding */
+    font-family: monospace;
+    font-size: 12.5px;
+    z-index: 806; /* Above status bar */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+/* Container for SFX label and checkbox */
+.sfx-container {
+    display: flex;
+    align-items: center; /* Vertically align label and checkbox */
+  }
+  
+  #sfx-label {
+    margin-right: 5px; /* Small gap between label and checkbox */
+  }
+  
+  #sfx-toggle {
+    cursor: pointer;
+    margin: 0; /* Remove default margin */
+  }
+
 /* Combat UI Elements */
 #test-damage, #start-combat {
     position: absolute;
@@ -284,7 +319,29 @@ body, html {
     text-align: center;
 }
 
-/* Fade and Drift Animation */
+/* nightland/src/styles/styles.css */
+/* Add this new style */
+.game-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center horizontally and vertically */
+    width: 300px;
+    background-color: rgba(0, 0, 0, 0.9);
+    border: 2px solid #8B0000;
+    padding: 15px;
+    color: #ff0000; /* Bright red text for emphasis */
+    font-family: 'Quintessential', cursive;
+    font-size: 20px;
+    text-align: center;
+    z-index: 1003; /* Above other dialogs */
+  }
+  
+/* Updated to 5s */
+  .fade-out8 {
+    animation: fadeAndDrift 10s ease-in-out forwards; 
+  }
+
 .fade-out {
     animation: fadeAndDrift 2s ease-in-out forwards;
 }

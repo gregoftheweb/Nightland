@@ -1,38 +1,25 @@
-// nightland/src/components/CombatUI.js
-import React from 'react';
-// import Dialog from './Dialog';
+// nightland/src/components/Dialog.js
+import React, { useEffect } from "react";
+import "../styles/styles.css";
 
-const CombatUI = ({ state, dispatch }) => {
-    console.log("CombatUI Component - inCombat:", state.inCombat, "Dialog Data:", state.dialogData);
+const Dialog = ({ message, onClose }) => {
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 5000); // 5 seconds
 
-    return (
-        <div className="combat-ui">
-            {/* Temporarily hide dialogs */}
-            {/* <Dialog data={state.dialogData.player} index="player" /> */}
-            {/* {state.attackSlots.map((enemy, index) => (
-                <Dialog
-                    key={enemy.id}
-                    data={{
-                        name: enemy.name,
-                        hp: enemy.hp,
-                        comment: state.combatTurn === enemy ? "Attacking!" : ""
-                    }}
-                    index={`enemy-${index}`}
-                />
-            ))} */}
+      return () => clearTimeout(timer);
+    }
+  }, [message, onClose]);
 
-            {/* Combat buttons for testing */}
-            <button id="test-damage" onClick={() => {
-                const damage = Math.floor(Math.random() * 10) + 1;
-                dispatch({ type: 'UPDATE_PLAYER_HP', payload: { hp: Math.max(0, state.player.hp - damage) } });
-            }}>
-                Test Damage
-            </button>
-            <button id="start-combat" onClick={() => dispatch({ type: 'SET_COMBAT', payload: { inCombat: false } })}>
-                End Combat
-            </button>
-        </div>
-    );
+  if (!message) return null;
+
+  return (
+    <div className="game-dialog fade-out8">
+      <p>{message}</p>
+    </div>
+  );
 };
 
-export default CombatUI;
+export default Dialog;

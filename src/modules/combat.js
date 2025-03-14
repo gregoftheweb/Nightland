@@ -1,5 +1,7 @@
 // nightland/src/modules/combat.js
 import { moveMonsters, checkMonsterSpawn } from "./gameLoop";
+import * as textContent from "../assets/copy/textcontent"; // Import text content for death messages
+import { initialState } from "./gameState"; // Import initialState to access player HP
 
 export const combatStep = (state, dispatch, setLastAction = () => {}) => {
   let newTurnOrder = [state.player, ...state.attackSlots];
@@ -18,7 +20,6 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
 
       if (damage > 1) {
         setLastAction({ type: "PLAYER_HIT", damage });
-
         if (newHP <= 0) {
           setLastAction({ type: "ENEMY_DEATH" });
         }
@@ -43,9 +44,10 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
 
       if (damage > 1) {
         setLastAction({ type: "ENEMY_HIT", damage });
-
         if (newPlayerHP <= 0) {
-          setTimeout(() => setLastAction({ type: "PLAYER_DEATH" }), 100);
+          const deathMessageKey = `combatChristosDeath${enemy.name}`;
+          const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
+          setLastAction({ type: "PLAYER_DEATH", message: deathMessage }); // Pass death message
         }
       } else {
         setLastAction({ type: "ENEMY_MISS" });
@@ -55,10 +57,10 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
 
       if (newPlayerHP <= 0) {
         resetChristos(state, dispatch);
-
         return;
       }
     } else if (enemy && enemy.hp <= 0) {
+      // No action needed here, already handled below
     }
 
     const currentIndex = newAttackSlots.indexOf(state.combatTurn);
@@ -133,7 +135,6 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
 };
 
 // [Rest of the file - moveWaitingMonsters and resetChristos - remains unchanged]
-
 const moveWaitingMonsters = (state, dispatch, attackSlots, waitingMonsters) => {
   if (!waitingMonsters || !Array.isArray(waitingMonsters)) {
     return {
@@ -181,10 +182,11 @@ const moveWaitingMonsters = (state, dispatch, attackSlots, waitingMonsters) => {
   };
 };
 
+
 const resetChristos = (state, dispatch) => {
   dispatch({
     type: "UPDATE_PLAYER_HP",
-    payload: { hp: 100 },
+    payload: { hp: initialState.player.hp }, // Use initial HP from gameState
   });
   dispatch({
     type: "MOVE_PLAYER",

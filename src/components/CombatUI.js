@@ -1,16 +1,16 @@
-// nightland/src/components/CombatUI.js
+// nightland/src/components/CombatUI.js (updated)
 import React, { useState, useEffect } from "react";
 import CombatDialog from "./CombatDialog";
 import DeathDialog from "./DeathDialog";
 import { combatStep } from "../modules/combat";
 
-const CombatUI = ({ state, dispatch, onCombatStep }) => {
+const CombatUI = ({ state, dispatch, onCombatStep, onPlayerDeath }) => {
   const [lastAction, setLastAction] = useState(null);
-  const [deathAction, setDeathAction] = useState(null);
+  const [deathQueue, setDeathQueue] = useState([]);
 
   useEffect(() => {
     if (state && state.attackSlots) {
-      //console.log("CombatUI attackSlots:", state.attackSlots.map(m => `${m.name} (HP: ${m.hp})`));
+      // console.log("CombatUI attackSlots:", state.attackSlots.map(m => `${m.name} (HP: ${m.hp})`));
     }
   }, [state?.attackSlots]);
 
@@ -20,21 +20,21 @@ const CombatUI = ({ state, dispatch, onCombatStep }) => {
       combatStep(state, dispatch, (action) => {
         setLastAction(action);
 
-        if (action.type === "ENEMY_DEATH" && preUpdateSlotsLength > 1) {
-          setDeathAction(action);
-
-          // Auto-advance turn after multi-monster death
-          if (state.inCombat) {
-            setTimeout(() => {
-              setLastAction(null); // Clear lastAction to allow next step
-            }, 2000); // Match DeathDialog duration
-          }
+        if (action.type === "ENEMY_DEATH") {
+          setDeathQueue((prev) => [...prev, action]);
+          setTimeout(() => {
+            setDeathQueue((prev) => prev.filter((d) => d !== action));
+            if (state.inCombat && preUpdateSlotsLength > 1) {
+              setLastAction(null);
+            }
+          }, 2000);
         } else if (action.type === "PLAYER_DEATH") {
-          setDeathAction(action);
+          setDeathQueue((prev) => [...prev, action]);
+          onPlayerDeath(action.message); // Trigger death message in App.js
         }
       });
     });
-  }, [state, dispatch, onCombatStep]);
+  }, [state, dispatch, onCombatStep, onPlayerDeath]);
 
   if (!state) {
     return null;
@@ -47,14 +47,15 @@ const CombatUI = ({ state, dispatch, onCombatStep }) => {
       {shouldShowCombatDialog && (
         <CombatDialog state={state} lastAction={lastAction} />
       )}
-      {deathAction && (
+      {deathQueue.map((deathAction, index) => (
         <DeathDialog
+          key={`${deathAction.type}-${index}`}
           deathAction={deathAction}
           onClose={() => {
-            setDeathAction(null);
+            setDeathQueue((prev) => prev.filter((_, i) => i !== index));
           }}
         />
-      )}
+      ))}
     </div>
   );
 };
