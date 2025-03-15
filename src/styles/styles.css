@@ -1,358 +1,408 @@
 /* nightland/src/styles/styles.css */
 
 /* Base Styles */
-body, html {
-    background-color: #000000;
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
+body,
+html {
+  background-color: #000000;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .app {
-    font-family: 'Quintessential', cursive;
-    background-color: #000000;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  font-family: "Quintessential", cursive;
+  background-color: #000000;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Splash Screen */
 #splash {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000000;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #splash img {
-    height: 80vh;
-    width: auto;
-    max-width: 100%;
+  height: 80vh;
+  width: auto;
+  max-width: 100%;
 }
 
 #splash-button {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60%;
-    padding: 5px;
-    background-color: transparent;
-    border: 2px solid #8B0000;
-    color: #8B0000;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 14px;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  padding: 5px;
+  background-color: transparent;
+  border: 2px solid #8b0000;
+  color: #8b0000;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 14px;
 }
 
 /* Princess Screen */
 #princess-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000000;
-    z-index: 900;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #princess-screen img {
-    height: 80vh;
-    width: auto;
-    max-width: 100%;
+  height: 80vh;
+  width: auto;
+  max-width: 100%;
 }
 
 .princess-dialog {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60%;
-    max-height: 33.33vh;
-    overflow-y: auto;
-    background: transparent;
-    border: 2px solid #8B0000;
-    color: #8B0000;
-    padding: 10px;
-    font-family: 'Quintessential', cursive;
-    font-size: 26px;
-    text-align: center;
-    z-index: 901;
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  max-height: 33.33vh;
+  overflow-y: auto;
+  background: transparent;
+  border: 2px solid #8b0000;
+  color: #8b0000;
+  padding: 10px;
+  font-family: "Quintessential", cursive;
+  font-size: 26px;
+  text-align: center;
+  z-index: 901;
 }
 
 #princess-button {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60%;
-    padding: 5px;
-    background-color: transparent;
-    border: 2px solid #8B0000;
-    color: #8B0000;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 14px;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  padding: 5px;
+  background-color: transparent;
+  border: 2px solid #8b0000;
+  color: #8b0000;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 14px;
 }
 
 /* Gameplay Screen */
 #gameplay-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000000;
-    z-index: 800;
-    overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  z-index: 800;
+  overflow: hidden;
 }
 
 /* Game Board - Matches 400x400 grid with 40px tiles */
 .game-board {
-    position: relative;
-    width: 16000px; /* 400 * 40px */
-    height: 16000px; /* 400 * 40px */
-    z-index: 801;
+  position: relative;
+  width: 16000px; /* 400 * 40px */
+  height: 16000px; /* 400 * 40px */
+  z-index: 801;
 }
 
-/* Game Elements - Use absolute for grid-based positioning */
-#player {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: url('../../public/assets/images/player.png') no-repeat center center / contain;
-    z-index: 804;
-    transition: all 0.2s ease;
-    cursor: pointer;
+/* nightland/src/styles/styles.css (relevant excerpt) */
+#christos {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: url("../../public/assets/images/player.png") no-repeat center
+    center / contain;
+  z-index: 804;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
+#redoubt {
+  position: absolute;
+  width: 197px;
+  height: 160px;
+  background: url("../../public/assets/images/redoubt.png") no-repeat center
+    center / cover;
+  z-index: 802;
+  cursor: pointer;
+}
+
+#watcherse {
+  position: absolute;
+  width: 197px;
+  height: 160px;
+  background: url("../../public/assets/images/watcherse.png") no-repeat center
+    center / cover;
+  z-index: 802;
+  cursor: pointer;
+}
+
+#abhuman {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: url("../../public/assets/images/abhuman.png") no-repeat center
+    center / contain;
+  z-index: 803;
+  transition: all 0.2s ease;
+border: 1px solid #ff0000;
+}
+/* nightland/src/styles/styles.css */
 .abhuman {
     position: absolute;
     width: 40px;
     height: 40px;
-    background: url('../../public/assets/images/abhuman.png') no-repeat center center / contain;
+    background: url("../../public/assets/images/abhuman.png") no-repeat center center / contain;
+    background-color: #00ff00; /* Bright green to test */
     z-index: 803;
     transition: all 0.2s ease;
-}
-
-#redoubt {
-    position: absolute;
-    width: 197px;
-    height: 160px;
-    background: url('../../public/assets/images/redoubt.png') no-repeat center center / cover;
-    z-index: 802;
-    cursor: pointer;
-}
-
+    border: 5px solid #ff0000; /* Thicker border to confirm */
+  }
 /* Status Bar */
 #status-bar {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 225px;
-    height: 30px;
-    background: transparent;
-    color: #8B0000;
-    border: 2px solid #8B0000;
-    padding: 3.75px 7.5px;
-    font-family: monospace;
-    font-size: 12.5px;
-    z-index: 805;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 225px;
+  height: 30px;
+  background: transparent;
+  color: #8b0000;
+  border: 2px solid #8b0000;
+  padding: 3.75px 7.5px;
+  font-family: monospace;
+  font-size: 12.5px;
+  z-index: 805;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* Gear Icon */
 #gear-icon {
-    width: 15px;
-    height: 15px;
-    cursor: pointer;
-    margin-left: auto;
-    display: block;
-    filter: invert(21%) sepia(93%) saturate(7426%) hue-rotate(359deg) brightness(102%) contrast(107%);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  margin-left: auto;
+  display: block;
+  filter: invert(21%) sepia(93%) saturate(7426%) hue-rotate(359deg)
+    brightness(102%) contrast(107%);
 }
 
 /* Settings Menu */
 #settings-menu {
-    position: fixed;
-    bottom: 34px; /* Just above status bar (30px height + 4px gap) */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 225px; /* Match status bar width */
-    height: 30px; /* Match status bar height */
-    background: rgba(41, 40, 40, 0.75); /* Gray with 75% transparency */
-    border: 2px solid #8B0000; /* Red border */
-    color: #8B0000;
-    padding: 3.75px 7.5px; /* Match status bar padding */
-    font-family: monospace;
-    font-size: 12.5px;
-    z-index: 806; /* Above status bar */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-/* Container for SFX label and checkbox */
-.sfx-container {
-    display: flex;
-    align-items: center; /* Vertically align label and checkbox */
-  }
-  
-  #sfx-label {
-    margin-right: 5px; /* Small gap between label and checkbox */
-  }
-  
-  #sfx-toggle {
-    cursor: pointer;
-    margin: 0; /* Remove default margin */
-  }
-
-/* Combat UI Elements */
-#test-damage, #start-combat {
-    position: absolute;
-    bottom: 60px;
-    width: 150px;
-    height: 40px;
-    background-color: transparent;
-    border: 2px solid #8B0000;
-    color: #8B0000;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 14px;
+  position: fixed;
+  bottom: 34px; /* Just above status bar (30px height + 4px gap) */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 225px; /* Match status bar width */
+  height: 30px; /* Match status bar height */
+  background: rgba(41, 40, 40, 0.75); /* Gray with 75% transparency */
+  border: 2px solid #8b0000; /* Red border */
+  color: #8b0000;
+  padding: 3.75px 7.5px; /* Match status bar padding */
+  font-family: monospace;
+  font-size: 12.5px;
+  z-index: 806; /* Above status bar */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-#test-damage { left: 10px; }
-#start-combat { left: 170px; }
+/* Container for SFX label and checkbox */
+.sfx-container {
+  display: flex;
+  align-items: center; /* Vertically align label and checkbox */
+}
+
+#sfx-label {
+  margin-right: 5px; /* Small gap between label and checkbox */
+}
+
+#sfx-toggle {
+  cursor: pointer;
+  margin: 0; /* Remove default margin */
+}
+
+/* Combat UI Elements */
+#test-damage,
+#start-combat {
+  position: absolute;
+  bottom: 60px;
+  width: 150px;
+  height: 40px;
+  background-color: transparent;
+  border: 2px solid #8b0000;
+  color: #8b0000;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+#test-damage {
+  left: 10px;
+}
+#start-combat {
+  left: 170px;
+}
 
 /* Combat Dialogs - Updated to support grid or fixed positioning */
 .combat {
-    position: absolute;
-    z-index: 10;
+  position: absolute;
+  z-index: 10;
 }
 /* nightland/src/styles/styles.css */
 .combat-slot {
-    border: 1px solid #ff0000; /* Visual cue for combat slots */
-    z-index: 1000; /* Above other elements */
-  }
-  
-.combat-player, .combat-enemy-1, .combat-enemy-2, .combat-enemy-3, .combat-enemy-4 {
-    position: absolute;
-    width: 200px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #8B0000;
-    border: 2px solid #8B0000;
-    padding: 5px 10px;
-    font-family: monospace;
-    font-size: 14px;
-    z-index: 10;
-    line-height: 1.2;
-    white-space: pre-wrap;
+  border: 1px solid #ff0000; /* Visual cue for combat slots */
+  z-index: 1000; /* Above other elements */
+}
+
+.combat-player,
+.combat-enemy-1,
+.combat-enemy-2,
+.combat-enemy-3,
+.combat-enemy-4 {
+  position: absolute;
+  width: 200px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #8b0000;
+  border: 2px solid #8b0000;
+  padding: 5px 10px;
+  font-family: monospace;
+  font-size: 14px;
+  z-index: 10;
+  line-height: 1.2;
+  white-space: pre-wrap;
 }
 
 .dead {
-    opacity: 0.5;
-    text-decoration: line-through;
+  opacity: 0.5;
+  text-decoration: line-through;
 }
 
 .flicker {
-    animation: flicker 0.5s ease-in-out;
+  animation: flicker 0.5s ease-in-out;
 }
 
 @keyframes flicker {
-    0% { opacity: 1; }
-    50% { opacity: 0; }
-    100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .background-audio {
-    display: none;
+  display: none;
 }
 
 .combat-ui {
-    position: absolute; /* Changed to absolute to not interfere with dialog */
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
+  position: absolute; /* Changed to absolute to not interfere with dialog */
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
 }
 
 /* Existing Combat Dialog Style (for reference) */
 .combat-dialog {
-    position: fixed;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 150px;
-    background-color: rgba(0, 0, 0, 0.7);
-    border: 2px solid #8B0000;
-    padding: 8px;
-    color: #8B0000;
-    font-family: Arial, sans-serif;
-    z-index: 1001;
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 150px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 2px solid #8b0000;
+  padding: 8px;
+  color: #8b0000;
+  font-family: Arial, sans-serif;
+  z-index: 1001;
 }
 
 .death-dialog {
-    position: fixed;
-    right: 20px;
-    top: 50%; /* Start at the same position as CombatDialog */
-    width: 150px;
-    background-color: rgba(0, 0, 0, 0.7);
-    border: 2px solid #ff0000; /* Bright red border */
-    padding: 8px;
-    color: #ff0000; /* Bright red text */
-    font-family: Arial, sans-serif;
-    z-index: 1002; /* Above combat dialog */
-    text-align: center;
+  position: fixed;
+  right: 20px;
+  top: 50%; /* Start at the same position as CombatDialog */
+  width: 150px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 2px solid #ff0000; /* Bright red border */
+  padding: 8px;
+  color: #ff0000; /* Bright red text */
+  font-family: Arial, sans-serif;
+  z-index: 1002; /* Above combat dialog */
+  text-align: center;
 }
 
 /* nightland/src/styles/styles.css */
 /* Add this new style */
 .game-dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); /* Center horizontally and vertically */
-    width: 300px;
-    background-color: rgba(0, 0, 0, 0.9);
-    border: 2px solid #8B0000;
-    padding: 15px;
-    color: #ff0000; /* Bright red text for emphasis */
-    font-family: 'Quintessential', cursive;
-    font-size: 20px;
-    text-align: center;
-    z-index: 1003; /* Above other dialogs */
-  }
-  
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center horizontally and vertically */
+  width: 300px;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 2px solid #8b0000;
+  padding: 15px;
+  color: #ff0000; /* Bright red text for emphasis */
+  font-family: "Quintessential", cursive;
+  font-size: 20px;
+  text-align: center;
+  z-index: 1003; /* Above other dialogs */
+}
+
 /* Updated to 5s */
-  .fade-out8 {
-    animation: fadeAndDrift 10s ease-in-out forwards; 
-  }
+.fade-out8 {
+  animation: simpleFade 10s ease-in-out forwards;
+}
 
 .fade-out {
-    animation: fadeAndDrift 2s ease-in-out forwards;
+  animation: fadeAndDrift 2s ease-in-out forwards;
+}
+
+@keyframes simpleFade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes fadeAndDrift {
-    0% { 
-        opacity: 1; 
-        transform: translateY(-50%); /* Start centered vertically */
-    }
-    100% { 
-        opacity: 0; 
-        transform: translateY(50px); /* Drift down 50px */
-    }
+  0% {
+    opacity: 1;
+    transform: translateY(-50%); /* Start centered vertically */
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(50px); /* Drift down 50px */
+  }
 }

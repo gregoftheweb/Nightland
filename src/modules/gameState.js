@@ -1,4 +1,4 @@
-// nightland/src/modules/gameState.js
+// nightland/src/modules/gameState.js (updated)
 export const initialState = {
   gridWidth: 400,
   gridHeight: 400,
@@ -9,7 +9,8 @@ export const initialState = {
     .map(() => Array(400).fill(".")),
   player: {
     name: "Christos",
-    hp: 25,
+    shortName: "christos", // Lowercase for consistency
+    hp: 15,
     position: { row: 395, col: 200 },
     description: "One of the humans from the Last Redoubt.",
     initiative: 10,
@@ -18,6 +19,7 @@ export const initialState = {
   },
   redoubt: {
     name: "The Last Redoubt",
+    shortName: "redoubt",
     position: { row: 395, col: 198 },
     description:
       "The last haven of mankind save one. It protects millions of souls from the horrors of the Nightland.",
@@ -25,17 +27,36 @@ export const initialState = {
   monsters: [
     {
       name: "Abhuman",
+      shortName: "abhuman",
       hp: 20,
       position: { row: 0, col: 0 },
       description:
-        "Created from corrupted human stock ages ago, their hatred of humans is bone deep and drives them to kill.",
+        "Abhuman. Created from corrupted human stock forgotten eaons ago. Their hatred of humans is bone deep and drives them to kill.",
       active: false,
       type: "regular",
       initiative: 5,
       maxInstances: 6,
       moveRate: 2,
-      spawnRate: 2,
-      spawnChance: 1,
+      spawnRate: 10,
+      spawnChance: 0.2,
+      attack: 5,
+    },
+  ],
+  greatPowers: [
+    {
+      name: "Watcher of the Southeast",
+      shortName: "watcherse",
+      hp: 200,
+      position: { row: 0, col: 399 },
+      description:
+        "One of the great powers and a source of great evil. It watches, silent, for Aeons.",
+      active: true,
+      type: "greatPower",
+      initiative: 5,
+      maxInstances: 1,
+      moveRate: 0,
+      spawnRate: 0,
+      spawnChance: 0,
       attack: 5,
     },
   ],
@@ -55,6 +76,7 @@ export const initialState = {
   audioStarted: false,
 };
 
+// [Reducer unchanged]
 export const reducer = (state = initialState, action) => {
   switch (action.type) {
     case "MOVE_PLAYER":
@@ -87,11 +109,12 @@ export const reducer = (state = initialState, action) => {
       };
     case "UPDATE_PLAYER_HP":
       return { ...state, player: { ...state.player, hp: action.payload.hp } };
-    case "SPAWN_MONSTER":
-      return {
-        ...state,
-        activeMonsters: [...state.activeMonsters, action.payload.monster],
-      };
+      case "SPAWN_MONSTER":
+        console.log("Reducer SPAWN_MONSTER:", action.payload.monster); // Debug
+        return {
+          ...state,
+          activeMonsters: [...state.activeMonsters, action.payload.monster],
+        };
     case "SET_COMBAT":
       return {
         ...state,
@@ -111,7 +134,6 @@ export const reducer = (state = initialState, action) => {
       return { ...state, dialogData: action.payload.dialogData };
     case "UPDATE_MOVE_COUNT":
       return { ...state, moveCount: action.payload.moveCount };
-
     case "UPDATE_WAITING_MONSTERS":
       return { ...state, waitingMonsters: action.payload.waitingMonsters };
     case "UPDATE_ACTIVE_MONSTERS":
@@ -125,6 +147,6 @@ export const reducer = (state = initialState, action) => {
       };
     default:
       console.warn(`Unhandled action type: ${action.type}`);
-      return state || initialState; // Safeguard: return initialState if state is undefined
+      return state || initialState;
   }
 };

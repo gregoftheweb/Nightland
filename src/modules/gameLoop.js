@@ -1,48 +1,49 @@
-// nightland/src/modules/gameLoop.js
-export const handleMovePlayer = (state, dispatch, key, showDialog) => {
-  if (state.inCombat) {
-   // showDialog("You are in combat! Press Spacebar to proceed.");
-    return;
-  }
+// nightland/src/modules/gameLoop.js (updated)
+import { resetChristos } from "./combat";
+import * as textContent from "../assets/copy/textcontent";
+
+export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessage) => {
+  if (state.inCombat) return;
 
   const newPosition = { ...state.player.position };
   switch (key) {
-    case "ArrowUp":
-      newPosition.row = Math.max(0, newPosition.row - 1);
-      break;
-    case "ArrowDown":
-      newPosition.row = Math.min(state.gridHeight - 1, newPosition.row + 1);
-      break;
-    case "ArrowLeft":
-      newPosition.col = Math.max(0, newPosition.col - 1);
-      break;
-    case "ArrowRight":
-      newPosition.col = Math.min(state.gridWidth - 1, newPosition.col + 1);
-      break;
-    default:
-      return;
+    case "ArrowUp": newPosition.row = Math.max(0, newPosition.row - 1); break;
+    case "ArrowDown": newPosition.row = Math.min(state.gridHeight - 1, newPosition.row + 1); break;
+    case "ArrowLeft": newPosition.col = Math.max(0, newPosition.col - 1); break;
+    case "ArrowRight": newPosition.col = Math.min(state.gridWidth - 1, newPosition.col + 1); break;
+    default: return;
+  }
+
+  const watcher = state.greatPowers.find((power) => power.shortName === "watcherse");
+  if (watcher && newPosition.row === watcher.position.row && newPosition.col === watcher.position.col) {
+    const deathMessageKey = `combatChristosDeath${watcher.shortName}`;
+    const deathMessage = textContent[deathMessageKey];
+    dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: 0 } });
+    resetChristos(state, dispatch);
+    setDeathMessage(deathMessage);
+    return;
   }
 
   dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
-  //showDialog(`Player moved ${key.toLowerCase().replace("arrow", "")}`);
 
   const newMoveCount = state.moveCount + 1;
-
   dispatch({ type: "UPDATE_MOVE_COUNT", payload: { moveCount: newMoveCount } });
-  checkMonsterSpawn(state, dispatch, showDialog);
-  moveMonsters(state, dispatch, showDialog, newPosition);
+  // Pass updated state with new moveCount
+  const updatedState = {
+    ...state,
+    player: { ...state.player, position: newPosition },
+    moveCount: newMoveCount,
+  };
+  checkMonsterSpawn(updatedState, dispatch, showDialog);
+  moveMonsters(updatedState, dispatch, showDialog, newPosition);
 };
 
+// nightland/src/modules/gameLoop.js (excerpt)
 export const checkMonsterSpawn = (state, dispatch, showDialog) => {
   const abhumanTemplate = state.monsters.find((m) => m.name === "Abhuman");
-  if (!abhumanTemplate) {
-    return;
-  }
+  if (!abhumanTemplate) return;
 
-  if (state.activeMonsters.length >= abhumanTemplate.maxInstances) {
-    // Max instances reached, no spawn.
-    return;
-  }
+  if (state.activeMonsters.length >= abhumanTemplate.maxInstances) return;
 
   if (
     (state.moveCount + 1) % abhumanTemplate.spawnRate === 0 &&
@@ -52,16 +53,11 @@ export const checkMonsterSpawn = (state, dispatch, showDialog) => {
     const newMonster = {
       ...abhumanTemplate,
       position: spawnPosition,
-      id: `abhuman-${Date.now()}`,
+      id: `${abhumanTemplate.shortName}-${Date.now()}`, // Kept shortName in ID for consistency
       active: true,
       hp: 20,
     };
     dispatch({ type: "SPAWN_MONSTER", payload: { monster: newMonster } });
-   // showDialog(
-    //  `An Abhuman has spawned at row ${spawnPosition.row}, col ${spawnPosition.col}!`
-   // );
-  } else {
-    //Spawn conditions not met
   }
 };
 
@@ -70,13 +66,15 @@ const getSpawnPosition = (playerPosition) => {
   const gridHeight = 400;
   const gridWidth = 400;
   do {
-    spawnRow = Math.floor(Math.random() * gridHeight);
-    spawnCol = Math.floor(Math.random() * gridWidth);
+    spawnRow = playerPosition.row + Math.floor(Math.random() * 11) - 5; // ±5 tiles
+    spawnCol = playerPosition.col + Math.floor(Math.random() * 11) - 5;
+    spawnRow = Math.max(0, Math.min(gridHeight - 1, spawnRow));
+    spawnCol = Math.max(0, Math.min(gridWidth - 1, spawnCol));
     distance = Math.sqrt(
       Math.pow(spawnRow - playerPosition.row, 2) +
-        Math.pow(spawnCol - playerPosition.col, 2)
+      Math.pow(spawnCol - playerPosition.col, 2)
     );
-  } while (distance < 10 || distance > 15);
+  } while (distance < 5 || distance > 10); // 5-10 tiles away
   return { row: spawnRow, col: spawnCol };
 };
 
@@ -86,10 +84,7 @@ export const moveMonsters = (
   showDialog,
   playerPosOverride
 ) => {
-  if (state.inCombat) {
-    //moveMonsters skipped due to inCombat
-    return;
-  }
+  if (state.inCombat) return;
 
   const playerPos = playerPosOverride || state.player.position;
 
@@ -151,7 +146,6 @@ const checkCollision = (monsterPos, playerPos) => {
   return monsterPos.row === playerPos.row && monsterPos.col === playerPos.col;
 };
 
-// nightland/src/modules/gameLoop.js (updated setupCombat)
 const setupCombat = (
   state,
   dispatch,
@@ -166,10 +160,10 @@ const setupCombat = (
   let newWaitingMonsters = [...state.waitingMonsters];
 
   const slotPositions = [
-    { row: playerPos.row - 1, col: playerPos.col - 1 }, // Top-left
-    { row: playerPos.row - 1, col: playerPos.col + 1 }, // Top-right
-    { row: playerPos.row + 1, col: playerPos.col - 1 }, // Bottom-left
-    { row: playerPos.row + 1, col: playerPos.col + 1 }, // Bottom-right
+    { row: playerPos.row - 1, col: playerPos.col - 1 },
+    { row: playerPos.row - 1, col: playerPos.col + 1 },
+    { row: playerPos.row + 1, col: playerPos.col - 1 },
+    { row: playerPos.row + 1, col: playerPos.col + 1 },
   ];
 
   if (!newAttackSlots.some((slot) => slot.id === monster.id)) {
@@ -177,9 +171,9 @@ const setupCombat = (
       const usedUISlots = newAttackSlots.map((slot) => slot.uiSlot || 0);
       const nextUISlot = [0, 1, 2, 3].find(
         (slot) => !usedUISlots.includes(slot)
-      ); // First empty UI slot
+      );
       monster.position = { ...slotPositions[nextUISlot] };
-      monster.uiSlot = nextUISlot; // Assign UI slot
+      monster.uiSlot = nextUISlot;
       newAttackSlots.push(monster);
     } else {
       if (!newWaitingMonsters.some((m) => m.id === monster.id)) {
@@ -211,8 +205,6 @@ const setupCombat = (
     type: "UPDATE_ACTIVE_MONSTERS",
     payload: { activeMonsters: updatedActiveMonsters },
   });
-
- 
 };
 
 export const handleMoveMonster = (state, dispatch, monsterId, direction) => {
