@@ -2,6 +2,7 @@
 import { resetChristos } from "./combat";
 import * as textContent from "../assets/copy/textcontent";
 
+// nightland/src/modules/gameLoop.js (excerpt)
 export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessage) => {
   if (state.inCombat) return;
 
@@ -14,29 +15,47 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     default: return;
   }
 
-  const watcher = state.greatPowers.find((power) => power.shortName === "watcherse");
-  if (watcher && newPosition.row === watcher.position.row && newPosition.col === watcher.position.col) {
-    const deathMessageKey = `combatChristosDeath${watcher.shortName}`;
-    const deathMessage = textContent[deathMessageKey];
-    dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: 0 } });
-    resetChristos(state, dispatch);
-    setDeathMessage(deathMessage);
-    return;
-  }
-
   dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
+
+  const updatedState = { ...state, player: { ...state.player, position: newPosition } };
+  const watcher = updatedState.greatPowers.find((power) => power.shortName === "watcherse");
+  if (watcher) {
+    const watcherLeft = watcher.position.col;
+    const watcherTop = watcher.position.row;
+    const watcherWidth = watcher.size?.width || 1;  // Default to 1 if size missing
+    const watcherHeight = watcher.size?.height || 1;
+    const watcherRight = watcherLeft + watcherWidth - 1;  // e.g., 198 + 4 - 1 = 201
+    const watcherBottom = watcherTop + watcherHeight - 1; // e.g., 350 + 4 - 1 = 353
+
+    if (
+      newPosition.row >= watcherTop &&
+      newPosition.row <= watcherBottom &&
+      newPosition.col >= watcherLeft &&
+      newPosition.col <= watcherRight
+    ) {
+      const deathMessageKey = `combatChristosDeath${watcher.shortName}`;
+      const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
+  
+      dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: 0 } });
+      resetChristos(updatedState, dispatch);
+      setDeathMessage(deathMessage);
+      return;
+    } else {
+      //console.log("No Collision - Player:", newPosition, "Watcher Area:", 
+         //         { top: watcherTop, left: watcherLeft, bottom: watcherBottom, right: watcherRight });
+    }
+  } else {
+    //console.log("Watcher Not Found in greatPowers:", updatedState.greatPowers);
+  }
 
   const newMoveCount = state.moveCount + 1;
   dispatch({ type: "UPDATE_MOVE_COUNT", payload: { moveCount: newMoveCount } });
-  // Pass updated state with new moveCount
-  const updatedState = {
-    ...state,
-    player: { ...state.player, position: newPosition },
-    moveCount: newMoveCount,
-  };
-  checkMonsterSpawn(updatedState, dispatch, showDialog);
-  moveMonsters(updatedState, dispatch, showDialog, newPosition);
+  const finalState = { ...updatedState, moveCount: newMoveCount };
+  checkMonsterSpawn(finalState, dispatch, showDialog);
+  moveMonsters(finalState, dispatch, showDialog, newPosition);
 };
+
+
 
 // nightland/src/modules/gameLoop.js (excerpt)
 export const checkMonsterSpawn = (state, dispatch, showDialog) => {

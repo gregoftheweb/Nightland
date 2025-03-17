@@ -15,8 +15,8 @@ export const combatEnemyMissComment = "He swings and misses!";
 export const combatStartPlayerComment = "Combat begins!";
 
 // Death messages for Christos by monster type
-export const combatChristosDeathAbhuman = "The Abhuman rends you limb from limb in their gory celebration of your death!";
-export const combatChristosDeathWatcherse = "The Watcher has eaten your eternal soul! Your existence is ended and all you will be is void.";
+export const combatChristosDeathabhuman = "The Abhuman rends you limb from limb in their gory celebration of your death!";
+export const combatChristosDeathwatcherse = "The Watcher has eaten your eternal soul! Your existence is ended and all you will ever be is void.";
 // Fallback for unknown monsters
 export const combatChristosDeathDefault = "A monstrous foe has ended your journey in the Nightland!";
 

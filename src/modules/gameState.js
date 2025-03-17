@@ -10,7 +10,7 @@ export const initialState = {
   player: {
     name: "Christos",
     shortName: "christos", // Lowercase for consistency
-    hp: 15,
+    hp: 100,
     position: { row: 395, col: 200 },
     description: "One of the humans from the Last Redoubt.",
     initiative: 10,
@@ -37,7 +37,7 @@ export const initialState = {
       initiative: 5,
       maxInstances: 6,
       moveRate: 2,
-      spawnRate: 10,
+      spawnRate: 8,
       spawnChance: 0.2,
       attack: 5,
     },
@@ -47,7 +47,8 @@ export const initialState = {
       name: "Watcher of the Southeast",
       shortName: "watcherse",
       hp: 200,
-      position: { row: 0, col: 399 },
+      position: { row: 350, col: 198 }, // Upper-left corner
+      size: { width: 4, height: 4 },    // 4x4 tile area
       description:
         "One of the great powers and a source of great evil. It watches, silent, for Aeons.",
       active: true,
@@ -109,12 +110,11 @@ export const reducer = (state = initialState, action) => {
       };
     case "UPDATE_PLAYER_HP":
       return { ...state, player: { ...state.player, hp: action.payload.hp } };
-      case "SPAWN_MONSTER":
-        console.log("Reducer SPAWN_MONSTER:", action.payload.monster); // Debug
-        return {
-          ...state,
-          activeMonsters: [...state.activeMonsters, action.payload.monster],
-        };
+    case "SPAWN_MONSTER":
+      return {
+        ...state,
+        activeMonsters: [...state.activeMonsters, action.payload.monster],
+      };
     case "SET_COMBAT":
       return {
         ...state,

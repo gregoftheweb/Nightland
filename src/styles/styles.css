@@ -153,34 +153,23 @@ html {
 
 #watcherse {
   position: absolute;
-  width: 197px;
-  height: 160px;
+  width: 160px; /* 4 tiles * 40px - explicit match to gameState settings */
+  height: 160px; /* 4 * 40 */
   background: url("../../public/assets/images/watcherse.png") no-repeat center
     center / cover;
   z-index: 802;
   cursor: pointer;
 }
 
-#abhuman {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  background: url("../../public/assets/images/abhuman.png") no-repeat center
-    center / contain;
-  z-index: 803;
-  transition: all 0.2s ease;
-border: 1px solid #ff0000;
-}
-/* nightland/src/styles/styles.css */
+
 .abhuman {
     position: absolute;
     width: 40px;
     height: 40px;
     background: url("../../public/assets/images/abhuman.png") no-repeat center center / contain;
-    background-color: #00ff00; /* Bright green to test */
     z-index: 803;
     transition: all 0.2s ease;
-    border: 5px solid #ff0000; /* Thicker border to confirm */
+ 
   }
 /* Status Bar */
 #status-bar {

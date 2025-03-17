@@ -20,6 +20,7 @@ const App = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [soloDeathAction, setSoloDeathAction] = useState(null);
   const [deathMessage, setDeathMessage] = useState("");
+  const [deathCount, setDeathCount] = useState(0); // New counter
   const [sfxEnabled, setSfxEnabled] = useState(true);
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
@@ -58,7 +59,10 @@ const App = () => {
   const showEntityDescription = (description) => setDeathMessage(description);
 
   const handleMovePlayerWithDeath = (state, dispatch, key) =>
-    handleMovePlayer(state, dispatch, key, showDialog, setDeathMessage);
+    handleMovePlayer(state, dispatch, key, showDialog, (msg) => {
+      setDeathMessage(msg);
+      setDeathCount((prev) => prev + 1); // Increment on each death
+    });
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -210,7 +214,11 @@ const App = () => {
             )}
           </div>
           <GameDialog message={dialogMessage} />
-          <Dialog message={deathMessage} onClose={() => setDeathMessage("")} />
+          <Dialog
+            key={deathCount} // Force remount on each death
+            message={deathMessage}
+            onClose={() => setDeathMessage("")}
+          />
           <audio id="background-audio" loop ref={audioRef} autoPlay={sfxEnabled}>
             <source src="/assets/sounds/ambient-background.wav" type="audio/wav" />
           </audio>
