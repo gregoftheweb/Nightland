@@ -1,5 +1,11 @@
 // nightland/src/App.js
-import React, { useReducer, useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useReducer,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { initialState, reducer } from "./modules/gameState";
 import SplashScreen from "./components/SplashScreen";
 import PrincessScreen from "./components/PrincessScreen";
@@ -37,7 +43,9 @@ const App = () => {
   useEffect(() => {
     if (audioRef.current) {
       if (sfxEnabled) {
-        audioRef.current.play().catch((error) => console.log("Audio play error:", error));
+        audioRef.current
+          .play()
+          .catch((error) => console.log("Audio play error:", error));
       } else {
         audioRef.current.pause();
       }
@@ -68,7 +76,11 @@ const App = () => {
     const handleKeyDown = (event) => {
       if (phase === "gameplay") {
         event.preventDefault();
-        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+        if (
+          ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(
+            event.key
+          )
+        ) {
           handleMovePlayerWithDeath(state, dispatch, event.key);
           updateViewport(state);
         } else if (event.key === " " && state.inCombat) {
@@ -92,11 +104,16 @@ const App = () => {
     const centerX = state.player.position.col * tileSize;
     const centerY = state.player.position.row * tileSize;
     switch (uiSlot) {
-      case 0: return { left: centerX - tileSize, top: centerY - tileSize };
-      case 1: return { left: centerX + tileSize, top: centerY - tileSize };
-      case 2: return { left: centerX - tileSize, top: centerY + tileSize };
-      case 3: return { left: centerX + tileSize, top: centerY + tileSize };
-      default: return { left: centerX, top: centerY };
+      case 0:
+        return { left: centerX - tileSize, top: centerY - tileSize };
+      case 1:
+        return { left: centerX + tileSize, top: centerY - tileSize };
+      case 2:
+        return { left: centerX - tileSize, top: centerY + tileSize };
+      case 3:
+        return { left: centerX + tileSize, top: centerY + tileSize };
+      default:
+        return { left: centerX, top: centerY };
     }
   };
 
@@ -190,6 +207,24 @@ const App = () => {
                     />
                   );
                 })}
+              {state.objects &&
+                state.objects.map((object) => (
+                  <div
+                    key={object.shortName}
+                    id={object.shortName}
+                    className={object.shortName}
+                    style={{
+                      left: `${object.position.col * state.tileSize}px`,
+                      top: `${object.position.row * state.tileSize}px`,
+                      position: "absolute",
+                      width: `${(object.size?.width || 1) * state.tileSize}px`, // Default to 1 if no size
+                      height: `${
+                        (object.size?.height || 1) * state.tileSize
+                      }px`, // Default to 1 if no size
+                    }}
+                    onClick={() => showEntityDescription(object.description)}
+                  />
+                ))}
             </div>
             <StatusBar hp={state.player.hp} onSettingsToggle={toggleSettings} />
             {showSettings && (
@@ -219,8 +254,16 @@ const App = () => {
             message={deathMessage}
             onClose={() => setDeathMessage("")}
           />
-          <audio id="background-audio" loop ref={audioRef} autoPlay={sfxEnabled}>
-            <source src="/assets/sounds/ambient-background.wav" type="audio/wav" />
+          <audio
+            id="background-audio"
+            loop
+            ref={audioRef}
+            autoPlay={sfxEnabled}
+          >
+            <source
+              src="/assets/sounds/ambient-background.wav"
+              type="audio/wav"
+            />
           </audio>
         </>
       )}

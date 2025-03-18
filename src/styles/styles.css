@@ -171,6 +171,13 @@ html {
     transition: all 0.2s ease;
  
   }
+  .footstepsPersius {
+    width: 40px;
+    height: 40px;
+    background: url("../../public/assets/images/footprints-blue.png") no-repeat center center / contain;
+    cursor: pointer;
+    position: "absolute";
+  }
 /* Status Bar */
 #status-bar {
   display: flex;

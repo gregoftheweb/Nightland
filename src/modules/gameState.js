@@ -61,6 +61,18 @@ export const initialState = {
       attack: 5,
     },
   ],
+  objects: [
+    {
+      name: "Footsteps of Persius",
+      shortName: "footstepsPersius",
+      position: { row: 100, col: 100 },
+      size: { width: 2, height: 2 },    // 2x2 tile area
+      description: "You discover the faint tracks of your friend Persius in the dry dust of the Nightland.  Your hope is forlorn, but meager as it is, there is some left that he might live..",
+      active: true,
+      type: "object",
+      maxInstances: 1,
+    },
+  ],
   activeMonsters: [],
   attackSlots: [],
   waitingMonsters: [],

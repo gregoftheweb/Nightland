@@ -3,6 +3,30 @@ import { resetChristos } from "./combat";
 import * as textContent from "../assets/copy/textcontent";
 
 // nightland/src/modules/gameLoop.js (excerpt)
+// nightland/src/modules/gameLoop.js
+import { textContent } from "../data/textContent"; // Ensure this import exists
+import { resetChristos } from "./gameState"; // Assuming this exists for reset logic
+import { checkMonsterSpawn, moveMonsters } from "./gameLoop"; // Ensure these are exported
+
+
+// Generic collision check function
+const checkCollision = (entity, position) => {
+  const left = entity.position.col;
+  const top = entity.position.row;
+  const width = entity.size?.width || 1;
+  const height = entity.size?.height || 1;
+  const right = left + width - 1;
+  const bottom = top + height - 1;
+
+  return (
+    position.row >= top &&
+    position.row <= bottom &&
+    position.col >= left &&
+    position.col <= right
+  );
+};
+
+
 export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessage) => {
   if (state.inCombat) return;
 
@@ -15,42 +39,37 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     default: return;
   }
 
-  dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
-
-  const updatedState = { ...state, player: { ...state.player, position: newPosition } };
-  const watcher = updatedState.greatPowers.find((power) => power.shortName === "watcherse");
-  if (watcher) {
-    const watcherLeft = watcher.position.col;
-    const watcherTop = watcher.position.row;
-    const watcherWidth = watcher.size?.width || 1;  // Default to 1 if size missing
-    const watcherHeight = watcher.size?.height || 1;
-    const watcherRight = watcherLeft + watcherWidth - 1;  // e.g., 198 + 4 - 1 = 201
-    const watcherBottom = watcherTop + watcherHeight - 1; // e.g., 350 + 4 - 1 = 353
-
-    if (
-      newPosition.row >= watcherTop &&
-      newPosition.row <= watcherBottom &&
-      newPosition.col >= watcherLeft &&
-      newPosition.col <= watcherRight
-    ) {
-      const deathMessageKey = `combatChristosDeath${watcher.shortName}`;
-      const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
-  
-      dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: 0 } });
-      resetChristos(updatedState, dispatch);
-      setDeathMessage(deathMessage);
-      return;
-    } else {
-      //console.log("No Collision - Player:", newPosition, "Watcher Area:", 
-         //         { top: watcherTop, left: watcherLeft, bottom: watcherBottom, right: watcherRight });
-    }
-  } else {
-    //console.log("Watcher Not Found in greatPowers:", updatedState.greatPowers);
+  // Check collisions with Great Powers
+  const greatPowerCollision = state.greatPowers.find((power) =>
+    checkCollision(power, newPosition)
+  );
+  if (greatPowerCollision) {
+    const deathMessageKey = `combatChristosDeath${greatPowerCollision.shortName}`;
+    const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
+    dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: 0 } });
+    resetChristos(state, dispatch);
+    setDeathMessage(deathMessage);
+    return;
   }
 
+  // Check collisions with objects
+  const objectCollision = state.objects.find((obj) => checkCollision(obj, newPosition));
+  if (objectCollision) {
+    showDialog(objectCollision.description, 3000);
+    // Optionally block movement: uncomment the next line
+    // return;
+  }
+
+  // Move player if no blocking collision
+  dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
+
+  // Update state for subsequent checks
+  const updatedState = { ...state, player: { ...state.player, position: newPosition } };
   const newMoveCount = state.moveCount + 1;
   dispatch({ type: "UPDATE_MOVE_COUNT", payload: { moveCount: newMoveCount } });
   const finalState = { ...updatedState, moveCount: newMoveCount };
+
+  // Monster logic
   checkMonsterSpawn(finalState, dispatch, showDialog);
   moveMonsters(finalState, dispatch, showDialog, newPosition);
 };
