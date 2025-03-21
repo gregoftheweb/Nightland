@@ -126,7 +126,20 @@ html {
   position: relative;
   width: 16000px; /* 400 * 40px */
   height: 16000px; /* 400 * 40px */
-  z-index: 801;
+  background: url("../../public/assets/images/dark-green-backround.jpg") repeat;
+  z-index: 0; /* Bottom of the stack (was 801) */
+}
+
+.river {
+  position: absolute;
+  width: 25px; /* 50 tiles wide (50 * 40px) */
+  height: 25px; /* 3 tiles tall (3 * 40px) */
+  left: 7000px; /* col 175 * 40px = 7000px */
+  top: 15600px; /* row 390 * 40px = 15600px */
+  background: url("../../public/assets/images/river1.png") no-repeat center center / 100% 100%;
+  z-index: 802; /* Above the board but below player/monsters */
+  transform: rotate(15deg); /* Same slight angle */
+  transform-origin: left center; /* Rotate from the left end */
 }
 
 /* nightland/src/styles/styles.css (relevant excerpt) */
@@ -171,6 +184,15 @@ html {
     transition: all 0.2s ease;
  
   }
+  .nighthound {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: url("../../public/assets/images/nighthound3.png") no-repeat center center / contain;
+    z-index: 803;
+    transition: all 0.2s ease;
+ 
+  }
   .footstepsPersius {
     width: 40px;
     height: 40px;
@@ -194,7 +216,7 @@ html {
   font-family: monospace;
   font-size: 12.5px;
   z-index: 805;
-  justify-content: space-between;
+  justify-content: space-around; /* Changed from space-between */
   align-items: center;
 }
 
@@ -203,7 +225,6 @@ html {
   width: 15px;
   height: 15px;
   cursor: pointer;
-  margin-left: auto;
   display: block;
   filter: invert(21%) sepia(93%) saturate(7426%) hue-rotate(359deg)
     brightness(102%) contrast(107%);

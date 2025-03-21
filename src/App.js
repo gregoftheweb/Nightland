@@ -1,4 +1,4 @@
-// nightland/src/App.js
+// nightland/src/App.js (updated)
 import React, {
   useReducer,
   useState,
@@ -26,7 +26,7 @@ const App = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [soloDeathAction, setSoloDeathAction] = useState(null);
   const [deathMessage, setDeathMessage] = useState("");
-  const [deathCount, setDeathCount] = useState(0); // New counter
+  const [deathCount, setDeathCount] = useState(0);
   const [sfxEnabled, setSfxEnabled] = useState(true);
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
@@ -66,10 +66,19 @@ const App = () => {
 
   const showEntityDescription = (description) => setDeathMessage(description);
 
+  const handleLevelClick = () => {
+    const currentLevel = (state.levels || []).find((lvl) => lvl.id === state.level) || {
+      name: "Unknown Level",
+      description: "No level data available.",
+    };
+    const levelMessage = `${currentLevel.name}\n${currentLevel.description}`;
+    showDialog(levelMessage, 10000); // 10s duration to match .fade-out8
+  };
+
   const handleMovePlayerWithDeath = (state, dispatch, key) =>
     handleMovePlayer(state, dispatch, key, showDialog, (msg) => {
       setDeathMessage(msg);
-      setDeathCount((prev) => prev + 1); // Increment on each death
+      setDeathCount((prev) => prev + 1);
     });
 
   useEffect(() => {
@@ -117,6 +126,11 @@ const App = () => {
     }
   };
 
+  const currentLevel = (state.levels || []).find((lvl) => lvl.id === state.level) || {
+    name: "Unknown Level",
+    description: "No level data available.",
+  };
+
   return (
     <div className="app">
       {phase === "splash" && <SplashScreen onStart={handleStartGame} />}
@@ -125,9 +139,13 @@ const App = () => {
         <>
           <div id="gameplay-screen" ref={gameContainerRef}>
             <div className="game-board">
+              <div className="level-info" style={{ position: "absolute", top: "10px", left: "10px", color: "white" }}>
+                <h2>{currentLevel.name}</h2>
+                <p>{currentLevel.description}</p>
+              </div>
               <div
-                id={state.player.shortName} // "christos"
-                className={state.player.shortName} // Add class for styling
+                id={state.player.shortName}
+                className={state.player.shortName}
                 style={{
                   left: `${state.player.position.col * state.tileSize}px`,
                   top: `${state.player.position.row * state.tileSize}px`,
@@ -138,8 +156,8 @@ const App = () => {
                 onClick={() => showEntityDescription(state.player.description)}
               />
               <div
-                id={state.redoubt.shortName} // "redoubt"
-                className={state.redoubt.shortName} // Optional: add class if styled
+                id={state.redoubt.shortName}
+                className={state.redoubt.shortName}
                 style={{
                   left: `${state.redoubt.position.col * state.tileSize}px`,
                   top: `${state.redoubt.position.row * state.tileSize}px`,
@@ -151,8 +169,8 @@ const App = () => {
                 state.greatPowers.map((power) => (
                   <div
                     key={power.shortName}
-                    id={power.shortName} // "watcherse"
-                    className={power.shortName} // Optional: add class if styled
+                    id={power.shortName}
+                    className={power.shortName}
                     style={{
                       left: `${power.position.col * state.tileSize}px`,
                       top: `${power.position.row * state.tileSize}px`,
@@ -175,8 +193,8 @@ const App = () => {
                   return renderPos ? (
                     <div
                       key={monster.id}
-                      id={monster.id} // "abhuman-<timestamp>"
-                      className={monster.shortName} // "abhuman"
+                      id={monster.id}
+                      className={monster.shortName}
                       style={{
                         left: `${renderPos.x}px`,
                         top: `${renderPos.y}px`,
@@ -195,7 +213,7 @@ const App = () => {
                     <div
                       key={monster.id}
                       id={`combat-${monster.id}`}
-                      className={monster.shortName} // "abhuman"
+                      className={monster.shortName}
                       style={{
                         left: `${slotPos.left}px`,
                         top: `${slotPos.top}px`,
@@ -217,16 +235,21 @@ const App = () => {
                       left: `${object.position.col * state.tileSize}px`,
                       top: `${object.position.row * state.tileSize}px`,
                       position: "absolute",
-                      width: `${(object.size?.width || 1) * state.tileSize}px`, // Default to 1 if no size
+                      width: `${(object.size?.width || 1) * state.tileSize}px`,
                       height: `${
                         (object.size?.height || 1) * state.tileSize
-                      }px`, // Default to 1 if no size
+                      }px`,
                     }}
                     onClick={() => showEntityDescription(object.description)}
                   />
                 ))}
             </div>
-            <StatusBar hp={state.player.hp} onSettingsToggle={toggleSettings} />
+            <StatusBar
+              hp={state.player.hp}
+              onSettingsToggle={toggleSettings}
+              level={state.level}
+              onLevelClick={handleLevelClick}
+            />
             {showSettings && (
               <SettingsMenu
                 sfxEnabled={sfxEnabled}
@@ -250,7 +273,7 @@ const App = () => {
           </div>
           <GameDialog message={dialogMessage} />
           <Dialog
-            key={deathCount} // Force remount on each death
+            key={deathCount}
             message={deathMessage}
             onClose={() => setDeathMessage("")}
           />
