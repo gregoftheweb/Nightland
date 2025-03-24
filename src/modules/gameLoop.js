@@ -1,6 +1,9 @@
 // nightland/src/modules/gameLoop.js (updated)
 import { resetChristos } from "./combat";
 import * as textContent from "../assets/copy/textcontent";
+
+// nightland/src/modules/gameLoop.js
+
 export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessage) => {
   if (state.inCombat) return;
 
@@ -16,6 +19,31 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
   dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
 
   const updatedState = { ...state, player: { ...state.player, position: newPosition } };
+
+  // Pool of Peace collision check (middle 2x2 tiles)
+  const poolCollision = state.pools.some((pool) => {
+    const poolRowStart = pool.position.row;
+    const poolColStart = pool.position.col;
+    const poolMiddleRowStart = poolRowStart + 1; // Middle starts at row + 1
+    const poolMiddleColStart = poolColStart + 1; // Middle starts at col + 1
+    const poolMiddleRowEnd = poolMiddleRowStart + 1; // 2 tiles tall
+    const poolMiddleColEnd = poolMiddleColStart + 1; // 2 tiles wide
+
+    return (
+      newPosition.row >= poolMiddleRowStart &&
+      newPosition.row <= poolMiddleRowEnd &&
+      newPosition.col >= poolMiddleColStart &&
+      newPosition.col <= poolMiddleColEnd
+    );
+  });
+
+  if (poolCollision) {
+    console.log("Dispatching RESET_HP, current HP:", updatedState.player.hp);
+    dispatch({ type: "RESET_HP" });
+    showDialog("The Pool of Peace restores your strength!", 3000);
+  }
+
+  // Watcher collision check
   const watcher = updatedState.greatPowers.find((power) => power.shortName === "watcherse");
   if (watcher) {
     const watcherLeft = watcher.position.col;
@@ -33,7 +61,7 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     ) {
       const deathMessageKey = `combatChristosDeath${watcher.shortName}`;
       const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
-  
+
       dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: 0 } });
       resetChristos(updatedState, dispatch);
       setDeathMessage(deathMessage);
@@ -41,12 +69,17 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     }
   }
 
+  // Update move count and finalize state
   const newMoveCount = state.moveCount + 1;
   dispatch({ type: "UPDATE_MOVE_COUNT", payload: { moveCount: newMoveCount } });
   const finalState = { ...updatedState, moveCount: newMoveCount };
+
+  // Monster spawning and movement
   checkMonsterSpawn(finalState, dispatch, showDialog);
   moveMonsters(finalState, dispatch, showDialog, newPosition);
 };
+
+
 
 export const checkMonsterSpawn = (state, dispatch, showDialog) => {
   const currentLevel = state.levels.find((lvl) => lvl.id === state.level);

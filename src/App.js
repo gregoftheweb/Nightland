@@ -52,6 +52,11 @@ const App = () => {
     }
   }, [sfxEnabled]);
 
+
+  useEffect(() => {
+    console.log("App.js - Player HP:", state.player.hp);
+  }, [state.player.hp]);
+
   const handleStartGame = () => setPhase("princess");
   const handlePrincessNext = () => setPhase("gameplay");
   const toggleSettings = (e) => {
@@ -67,7 +72,9 @@ const App = () => {
   const showEntityDescription = (description) => setDeathMessage(description);
 
   const handleLevelClick = () => {
-    const currentLevel = (state.levels || []).find((lvl) => lvl.id === state.level) || {
+    const currentLevel = (state.levels || []).find(
+      (lvl) => lvl.id === state.level
+    ) || {
       name: "Unknown Level",
       description: "No level data available.",
     };
@@ -126,7 +133,9 @@ const App = () => {
     }
   };
 
-  const currentLevel = (state.levels || []).find((lvl) => lvl.id === state.level) || {
+  const currentLevel = (state.levels || []).find(
+    (lvl) => lvl.id === state.level
+  ) || {
     name: "Unknown Level",
     description: "No level data available.",
   };
@@ -139,7 +148,15 @@ const App = () => {
         <>
           <div id="gameplay-screen" ref={gameContainerRef}>
             <div className="game-board">
-              <div className="level-info" style={{ position: "absolute", top: "10px", left: "10px", color: "white" }}>
+              <div
+                className="level-info"
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  left: "10px",
+                  color: "white",
+                }}
+              >
                 <h2>{currentLevel.name}</h2>
                 <p>{currentLevel.description}</p>
               </div>
@@ -239,10 +256,56 @@ const App = () => {
                       height: `${
                         (object.size?.height || 1) * state.tileSize
                       }px`,
+                      transform: `rotate(${object.direction || 0}deg)`, // Apply rotation
+                      transformOrigin: "center center", // Rotate around the center
                     }}
                     onClick={() => showEntityDescription(object.description)}
                   />
                 ))}
+              {state.pools &&
+                state.pools.map((pool) => {
+                  const template = state.poolsTemplate;
+                  return (
+                    <div
+                      key={`poolOfPeace-${pool.id}`}
+                      id={`poolOfPeace-${pool.id}`}
+                      className={template.shortName}
+                      style={{
+                        left: `${pool.position.col * state.tileSize}px`,
+                        top: `${pool.position.row * state.tileSize}px`,
+                        position: "absolute",
+                        width: `${template.size.width * state.tileSize}px`,
+                        height: `${template.size.height * state.tileSize}px`,
+                      }}
+                      onClick={() =>
+                        showEntityDescription(template.description)
+                      }
+                    />
+                  );
+                })}
+                             {state.footsteps &&
+                state.footsteps.map((step) => {
+                  const template = state.footstepsTemplate;
+                  return (
+                    <div
+                      key={`footstepsPersius-${step.id}`}
+                      id={`footstepsPersius-${step.id}`}
+                      className={template.shortName}
+                      style={{
+                        left: `${step.position.col * state.tileSize}px`,
+                        top: `${step.position.row * state.tileSize}px`,
+                        position: "absolute",
+                        width: `${template.size.width * state.tileSize}px`,
+                        height: `${template.size.height * state.tileSize}px`,
+                        transform: `rotate(${step.direction}deg)`,
+                        transformOrigin: "center center",
+                      }}
+                      onClick={() =>
+                        showEntityDescription(template.description)
+                      }
+                    />
+                  );
+                })}
             </div>
             <StatusBar
               hp={state.player.hp}
