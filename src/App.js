@@ -1,5 +1,11 @@
-// nightland/src/App.js
-import React, { useReducer, useState, useEffect, useCallback, useRef } from "react";
+// nightland/src/App.js (updated)
+import React, {
+  useReducer,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { initialState, reducer } from "./modules/gameState";
 import SplashScreen from "./components/SplashScreen";
 import PrincessScreen from "./components/PrincessScreen";
@@ -20,7 +26,7 @@ const App = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [soloDeathAction, setSoloDeathAction] = useState(null);
   const [deathMessage, setDeathMessage] = useState("");
-  const [deathCount, setDeathCount] = useState(0); // New counter
+  const [deathCount, setDeathCount] = useState(0);
   const [sfxEnabled, setSfxEnabled] = useState(true);
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
@@ -37,12 +43,19 @@ const App = () => {
   useEffect(() => {
     if (audioRef.current) {
       if (sfxEnabled) {
-        audioRef.current.play().catch((error) => console.log("Audio play error:", error));
+        audioRef.current
+          .play()
+          .catch((error) => console.log("Audio play error:", error));
       } else {
         audioRef.current.pause();
       }
     }
   }, [sfxEnabled]);
+
+
+  useEffect(() => {
+    console.log("App.js - Player HP:", state.player.hp);
+  }, [state.player.hp]);
 
   const handleStartGame = () => setPhase("princess");
   const handlePrincessNext = () => setPhase("gameplay");
@@ -58,17 +71,32 @@ const App = () => {
 
   const showEntityDescription = (description) => setDeathMessage(description);
 
+  const handleLevelClick = () => {
+    const currentLevel = (state.levels || []).find(
+      (lvl) => lvl.id === state.level
+    ) || {
+      name: "Unknown Level",
+      description: "No level data available.",
+    };
+    const levelMessage = `${currentLevel.name}\n${currentLevel.description}`;
+    showDialog(levelMessage, 10000); // 10s duration to match .fade-out8
+  };
+
   const handleMovePlayerWithDeath = (state, dispatch, key) =>
     handleMovePlayer(state, dispatch, key, showDialog, (msg) => {
       setDeathMessage(msg);
-      setDeathCount((prev) => prev + 1); // Increment on each death
+      setDeathCount((prev) => prev + 1);
     });
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (phase === "gameplay") {
         event.preventDefault();
-        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+        if (
+          ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(
+            event.key
+          )
+        ) {
           handleMovePlayerWithDeath(state, dispatch, event.key);
           updateViewport(state);
         } else if (event.key === " " && state.inCombat) {
@@ -92,12 +120,24 @@ const App = () => {
     const centerX = state.player.position.col * tileSize;
     const centerY = state.player.position.row * tileSize;
     switch (uiSlot) {
-      case 0: return { left: centerX - tileSize, top: centerY - tileSize };
-      case 1: return { left: centerX + tileSize, top: centerY - tileSize };
-      case 2: return { left: centerX - tileSize, top: centerY + tileSize };
-      case 3: return { left: centerX + tileSize, top: centerY + tileSize };
-      default: return { left: centerX, top: centerY };
+      case 0:
+        return { left: centerX - tileSize, top: centerY - tileSize };
+      case 1:
+        return { left: centerX + tileSize, top: centerY - tileSize };
+      case 2:
+        return { left: centerX - tileSize, top: centerY + tileSize };
+      case 3:
+        return { left: centerX + tileSize, top: centerY + tileSize };
+      default:
+        return { left: centerX, top: centerY };
     }
+  };
+
+  const currentLevel = (state.levels || []).find(
+    (lvl) => lvl.id === state.level
+  ) || {
+    name: "Unknown Level",
+    description: "No level data available.",
   };
 
   return (
@@ -109,8 +149,20 @@ const App = () => {
           <div id="gameplay-screen" ref={gameContainerRef}>
             <div className="game-board">
               <div
-                id={state.player.shortName} // "christos"
-                className={state.player.shortName} // Add class for styling
+                className="level-info"
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  left: "10px",
+                  color: "white",
+                }}
+              >
+                <h2>{currentLevel.name}</h2>
+                <p>{currentLevel.description}</p>
+              </div>
+              <div
+                id={state.player.shortName}
+                className={state.player.shortName}
                 style={{
                   left: `${state.player.position.col * state.tileSize}px`,
                   top: `${state.player.position.row * state.tileSize}px`,
@@ -121,8 +173,8 @@ const App = () => {
                 onClick={() => showEntityDescription(state.player.description)}
               />
               <div
-                id={state.redoubt.shortName} // "redoubt"
-                className={state.redoubt.shortName} // Optional: add class if styled
+                id={state.redoubt.shortName}
+                className={state.redoubt.shortName}
                 style={{
                   left: `${state.redoubt.position.col * state.tileSize}px`,
                   top: `${state.redoubt.position.row * state.tileSize}px`,
@@ -134,8 +186,8 @@ const App = () => {
                 state.greatPowers.map((power) => (
                   <div
                     key={power.shortName}
-                    id={power.shortName} // "watcherse"
-                    className={power.shortName} // Optional: add class if styled
+                    id={power.shortName}
+                    className={power.shortName}
                     style={{
                       left: `${power.position.col * state.tileSize}px`,
                       top: `${power.position.row * state.tileSize}px`,
@@ -158,8 +210,8 @@ const App = () => {
                   return renderPos ? (
                     <div
                       key={monster.id}
-                      id={monster.id} // "abhuman-<timestamp>"
-                      className={monster.shortName} // "abhuman"
+                      id={monster.id}
+                      className={monster.shortName}
                       style={{
                         left: `${renderPos.x}px`,
                         top: `${renderPos.y}px`,
@@ -178,7 +230,7 @@ const App = () => {
                     <div
                       key={monster.id}
                       id={`combat-${monster.id}`}
-                      className={monster.shortName} // "abhuman"
+                      className={monster.shortName}
                       style={{
                         left: `${slotPos.left}px`,
                         top: `${slotPos.top}px`,
@@ -190,8 +242,77 @@ const App = () => {
                     />
                   );
                 })}
+              {state.objects &&
+                state.objects.map((object) => (
+                  <div
+                    key={object.shortName}
+                    id={object.shortName}
+                    className={object.shortName}
+                    style={{
+                      left: `${object.position.col * state.tileSize}px`,
+                      top: `${object.position.row * state.tileSize}px`,
+                      position: "absolute",
+                      width: `${(object.size?.width || 1) * state.tileSize}px`,
+                      height: `${
+                        (object.size?.height || 1) * state.tileSize
+                      }px`,
+                      transform: `rotate(${object.direction || 0}deg)`, // Apply rotation
+                      transformOrigin: "center center", // Rotate around the center
+                    }}
+                    onClick={() => showEntityDescription(object.description)}
+                  />
+                ))}
+              {state.pools &&
+                state.pools.map((pool) => {
+                  const template = state.poolsTemplate;
+                  return (
+                    <div
+                      key={`poolOfPeace-${pool.id}`}
+                      id={`poolOfPeace-${pool.id}`}
+                      className={template.shortName}
+                      style={{
+                        left: `${pool.position.col * state.tileSize}px`,
+                        top: `${pool.position.row * state.tileSize}px`,
+                        position: "absolute",
+                        width: `${template.size.width * state.tileSize}px`,
+                        height: `${template.size.height * state.tileSize}px`,
+                      }}
+                      onClick={() =>
+                        showEntityDescription(template.description)
+                      }
+                    />
+                  );
+                })}
+                             {state.footsteps &&
+                state.footsteps.map((step) => {
+                  const template = state.footstepsTemplate;
+                  return (
+                    <div
+                      key={`footstepsPersius-${step.id}`}
+                      id={`footstepsPersius-${step.id}`}
+                      className={template.shortName}
+                      style={{
+                        left: `${step.position.col * state.tileSize}px`,
+                        top: `${step.position.row * state.tileSize}px`,
+                        position: "absolute",
+                        width: `${template.size.width * state.tileSize}px`,
+                        height: `${template.size.height * state.tileSize}px`,
+                        transform: `rotate(${step.direction}deg)`,
+                        transformOrigin: "center center",
+                      }}
+                      onClick={() =>
+                        showEntityDescription(template.description)
+                      }
+                    />
+                  );
+                })}
             </div>
-            <StatusBar hp={state.player.hp} onSettingsToggle={toggleSettings} />
+            <StatusBar
+              hp={state.player.hp}
+              onSettingsToggle={toggleSettings}
+              level={state.level}
+              onLevelClick={handleLevelClick}
+            />
             {showSettings && (
               <SettingsMenu
                 sfxEnabled={sfxEnabled}
@@ -215,12 +336,20 @@ const App = () => {
           </div>
           <GameDialog message={dialogMessage} />
           <Dialog
-            key={deathCount} // Force remount on each death
+            key={deathCount}
             message={deathMessage}
             onClose={() => setDeathMessage("")}
           />
-          <audio id="background-audio" loop ref={audioRef} autoPlay={sfxEnabled}>
-            <source src="/assets/sounds/ambient-background.wav" type="audio/wav" />
+          <audio
+            id="background-audio"
+            loop
+            ref={audioRef}
+            autoPlay={sfxEnabled}
+          >
+            <source
+              src="/assets/sounds/ambient-background.wav"
+              type="audio/wav"
+            />
           </audio>
         </>
       )}

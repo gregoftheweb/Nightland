@@ -2,7 +2,8 @@
 import { resetChristos } from "./combat";
 import * as textContent from "../assets/copy/textcontent";
 
-// nightland/src/modules/gameLoop.js (excerpt)
+// nightland/src/modules/gameLoop.js
+
 export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessage) => {
   if (state.inCombat) return;
 
@@ -18,14 +19,39 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
   dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
 
   const updatedState = { ...state, player: { ...state.player, position: newPosition } };
+
+  // Pool of Peace collision check (middle 2x2 tiles)
+  const poolCollision = state.pools.some((pool) => {
+    const poolRowStart = pool.position.row;
+    const poolColStart = pool.position.col;
+    const poolMiddleRowStart = poolRowStart + 1; // Middle starts at row + 1
+    const poolMiddleColStart = poolColStart + 1; // Middle starts at col + 1
+    const poolMiddleRowEnd = poolMiddleRowStart + 1; // 2 tiles tall
+    const poolMiddleColEnd = poolMiddleColStart + 1; // 2 tiles wide
+
+    return (
+      newPosition.row >= poolMiddleRowStart &&
+      newPosition.row <= poolMiddleRowEnd &&
+      newPosition.col >= poolMiddleColStart &&
+      newPosition.col <= poolMiddleColEnd
+    );
+  });
+
+  if (poolCollision) {
+    console.log("Dispatching RESET_HP, current HP:", updatedState.player.hp);
+    dispatch({ type: "RESET_HP" });
+    showDialog("The Pool of Peace restores your strength!", 3000);
+  }
+
+  // Watcher collision check
   const watcher = updatedState.greatPowers.find((power) => power.shortName === "watcherse");
   if (watcher) {
     const watcherLeft = watcher.position.col;
     const watcherTop = watcher.position.row;
-    const watcherWidth = watcher.size?.width || 1;  // Default to 1 if size missing
+    const watcherWidth = watcher.size?.width || 1;
     const watcherHeight = watcher.size?.height || 1;
-    const watcherRight = watcherLeft + watcherWidth - 1;  // e.g., 198 + 4 - 1 = 201
-    const watcherBottom = watcherTop + watcherHeight - 1; // e.g., 350 + 4 - 1 = 353
+    const watcherRight = watcherLeft + watcherWidth - 1;
+    const watcherBottom = watcherTop + watcherHeight - 1;
 
     if (
       newPosition.row >= watcherTop &&
@@ -35,49 +61,53 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     ) {
       const deathMessageKey = `combatChristosDeath${watcher.shortName}`;
       const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
-  
+
       dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: 0 } });
       resetChristos(updatedState, dispatch);
       setDeathMessage(deathMessage);
       return;
-    } else {
-      //console.log("No Collision - Player:", newPosition, "Watcher Area:", 
-         //         { top: watcherTop, left: watcherLeft, bottom: watcherBottom, right: watcherRight });
     }
-  } else {
-    //console.log("Watcher Not Found in greatPowers:", updatedState.greatPowers);
   }
 
+  // Update move count and finalize state
   const newMoveCount = state.moveCount + 1;
   dispatch({ type: "UPDATE_MOVE_COUNT", payload: { moveCount: newMoveCount } });
   const finalState = { ...updatedState, moveCount: newMoveCount };
+
+  // Monster spawning and movement
   checkMonsterSpawn(finalState, dispatch, showDialog);
   moveMonsters(finalState, dispatch, showDialog, newPosition);
 };
 
 
 
-// nightland/src/modules/gameLoop.js (excerpt)
 export const checkMonsterSpawn = (state, dispatch, showDialog) => {
-  const abhumanTemplate = state.monsters.find((m) => m.name === "Abhuman");
-  if (!abhumanTemplate) return;
+  const currentLevel = state.levels.find((lvl) => lvl.id === state.level);
+  if (!currentLevel) return; // Safety check
 
-  if (state.activeMonsters.length >= abhumanTemplate.maxInstances) return;
+  // For Level 1, use existing monsters; this can be adjusted per level later
+  state.monsters.forEach((monsterTemplate) => {
+    const activeCount = state.activeMonsters.filter(
+      (m) => m.name === monsterTemplate.name
+    ).length;
 
-  if (
-    (state.moveCount + 1) % abhumanTemplate.spawnRate === 0 &&
-    Math.random() < abhumanTemplate.spawnChance
-  ) {
-    const spawnPosition = getSpawnPosition(state.player.position);
-    const newMonster = {
-      ...abhumanTemplate,
-      position: spawnPosition,
-      id: `${abhumanTemplate.shortName}-${Date.now()}`, // Kept shortName in ID for consistency
-      active: true,
-      hp: 20,
-    };
-    dispatch({ type: "SPAWN_MONSTER", payload: { monster: newMonster } });
-  }
+    if (activeCount >= monsterTemplate.maxInstances) return;
+
+    if (
+      (state.moveCount + 1) % monsterTemplate.spawnRate === 0 &&
+      Math.random() < monsterTemplate.spawnChance
+    ) {
+      const spawnPosition = getSpawnPosition(state.player.position);
+      const newMonster = {
+        ...monsterTemplate,
+        position: spawnPosition,
+        id: `${monsterTemplate.shortName}-${Date.now()}`,
+        active: true,
+        hp: monsterTemplate.hp || 20,
+      };
+      dispatch({ type: "SPAWN_MONSTER", payload: { monster: newMonster } });
+    }
+  });
 };
 
 const getSpawnPosition = (playerPosition) => {
