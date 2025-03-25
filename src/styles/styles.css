@@ -187,6 +187,13 @@ html {
   background: url("../../public/assets/images/cursedtotem.png") no-repeat center center / contain;
   z-index: 802; /* Same as other static objects like poolOfPeace, below player/monsters */
 }
+.shatteredObelisk {
+  position: absolute;
+  width: 120px; /* 3 * 40px */
+  height: 120px; /* 3 * 40px */
+  background: url("../../public/assets/images/obelisk4.png") no-repeat center center / contain;
+  z-index: 802;
+}
 
 .abhuman {
     position: absolute;

@@ -120,17 +120,21 @@ export const initialState = {
       ],
     },
     {
-      name: "Shroud of Silence",
-      shortName: "shroud",
-      position: { row: 385, col: 195 },
-      description: "A mystical cloak that renders the wearer unseen.",
+      name: "Shattered Obelisk",
+      shortName: "shatteredObelisk",
+      position: { row: 370, col: 200 },
+      size: { width: 3, height: 3 },
+      description: "A jagged spire of black stone pulses with a sickly red glow, calling horrors from the shadows.",
       active: true,
+      lastTrigger: 0,
       type: "object",
       maxInstances: 1,
       effects: [
         {
-          type: "hide",
-          duration: 5, // Hides Christos for 5 turns
+          type: "swarm",
+          monsterType: "Night Hound",
+          count: 4,
+          range: 12,
         },
       ],
     },
