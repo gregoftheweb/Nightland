@@ -180,7 +180,13 @@ html {
   z-index: 802;
   cursor: pointer;
 }
-
+.cursedTotem {
+  position: absolute;
+  width: 160px; /* 4 tiles * 40px - explicit match to gameState settings */
+  height: 160px; /* 4 * 40 */
+  background: url("../../public/assets/images/cursedtotem.png") no-repeat center center / contain;
+  z-index: 802; /* Same as other static objects like poolOfPeace, below player/monsters */
+}
 
 .abhuman {
     position: absolute;

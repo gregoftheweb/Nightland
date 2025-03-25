@@ -4,6 +4,8 @@ import * as textContent from "../assets/copy/textcontent";
 
 // nightland/src/modules/gameLoop.js
 
+
+
 export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessage) => {
   if (state.inCombat) return;
 
@@ -16,18 +18,68 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     default: return;
   }
 
+  // Move the player
   dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
 
   const updatedState = { ...state, player: { ...state.player, position: newPosition } };
 
-  // Pool of Peace collision check (middle 2x2 tiles)
-  const poolCollision = state.pools.some((pool) => {
+  // Check for objects with effects at the new position, considering size
+  const objectAtPosition = state.objects.find((obj) => {
+    const objRowStart = obj.position.row;
+    const objColStart = obj.position.col;
+    const objWidth = obj.size?.width || 1;
+    const objHeight = obj.size?.height || 1;
+    const objRowEnd = objRowStart + objHeight - 1;
+    const objColEnd = objColStart + objWidth - 1;
+
+    return (
+      obj.active &&
+      newPosition.row >= objRowStart &&
+      newPosition.row <= objRowEnd &&
+      newPosition.col >= objColStart &&
+      newPosition.col <= objColEnd
+    );
+  });
+
+  if (objectAtPosition && objectAtPosition.effects) {
+    const now = Date.now();
+    const lastTrigger = objectAtPosition.lastTrigger || 0;
+    if (now - lastTrigger > 50000) { // 5-second cooldown
+      console.log("Collision with:", objectAtPosition, "at", newPosition);
+      objectAtPosition.effects.forEach((effect) => {
+        dispatch({
+          type: "TRIGGER_EFFECT",
+          payload: { effect, position: newPosition },
+        });
+        switch (effect.type) {
+          case "swarm":
+            showDialog(`A swarm of ${effect.monsterType}s emerges from the ${objectAtPosition.name}!`, 3000);
+            dispatch({
+              type: "UPDATE_OBJECT",
+              payload: { shortName: objectAtPosition.shortName, updates: { lastTrigger: now } },
+            });
+            break;
+          case "hide":
+            showDialog(`The ${objectAtPosition.name} cloaks you in silence.`, 3000);
+            break;
+          case "heal":
+            showDialog(`The ${objectAtPosition.name} restores your strength!`, 3000);
+            break;
+          default:
+            break;
+        }
+      });
+    }
+  }
+
+  // Check for pools with effects (already handles size)
+  const poolAtPosition = state.pools.find((pool) => {
     const poolRowStart = pool.position.row;
     const poolColStart = pool.position.col;
-    const poolMiddleRowStart = poolRowStart + 1; // Middle starts at row + 1
-    const poolMiddleColStart = poolColStart + 1; // Middle starts at col + 1
-    const poolMiddleRowEnd = poolMiddleRowStart + 1; // 2 tiles tall
-    const poolMiddleColEnd = poolMiddleColStart + 1; // 2 tiles wide
+    const poolMiddleRowStart = poolRowStart + 1;
+    const poolMiddleColStart = poolColStart + 1;
+    const poolMiddleRowEnd = poolMiddleRowStart + 1;
+    const poolMiddleColEnd = poolMiddleColStart + 1;
 
     return (
       newPosition.row >= poolMiddleRowStart &&
@@ -37,13 +89,23 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     );
   });
 
-  if (poolCollision) {
-    console.log("Dispatching RESET_HP, current HP:", updatedState.player.hp);
-    dispatch({ type: "RESET_HP" });
-    showDialog("The Pool of Peace restores your strength!", 3000);
+  if (poolAtPosition && state.poolsTemplate.effects) {
+    state.poolsTemplate.effects.forEach((effect) => {
+      dispatch({
+        type: "TRIGGER_EFFECT",
+        payload: { effect, position: newPosition },
+      });
+      switch (effect.type) {
+        case "heal":
+          showDialog("The Pool of Peace restores your strength!", 3000);
+          break;
+        default:
+          break;
+      }
+    });
   }
 
-  // Watcher collision check
+  // Watcher collision check (already handles size)
   const watcher = updatedState.greatPowers.find((power) => power.shortName === "watcherse");
   if (watcher) {
     const watcherLeft = watcher.position.col;
@@ -69,15 +131,26 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     }
   }
 
+  // Decrement hide turns if Christos is hidden
+  if (state.player.isHidden) {
+    dispatch({ type: "DECREMENT_HIDE_TURNS" });
+  }
+
   // Update move count and finalize state
   const newMoveCount = state.moveCount + 1;
   dispatch({ type: "UPDATE_MOVE_COUNT", payload: { moveCount: newMoveCount } });
   const finalState = { ...updatedState, moveCount: newMoveCount };
 
-  // Monster spawning and movement
+  // Monster spawning and movement (skip combat initiation if hidden)
   checkMonsterSpawn(finalState, dispatch, showDialog);
-  moveMonsters(finalState, dispatch, showDialog, newPosition);
+  if (!finalState.player.isHidden) {
+    moveMonsters(finalState, dispatch, showDialog, newPosition);
+  }
 };
+
+
+
+
 
 
 

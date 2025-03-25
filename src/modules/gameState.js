@@ -99,6 +99,41 @@ export const initialState = {
       type: "object",
       maxInstances: 1,
     },
+    {
+      name: "Cursed Totem",
+      shortName: "cursedTotem",
+      position: { row: 390, col: 190 },
+      size: { width: 4, height: 4 },
+      description:
+        "A twisted relic that calls forth the horrors of the Night Land.",
+      active: true,
+      lastTrigger: 0,
+      type: "object",
+      maxInstances: 1,
+      effects: [
+        {
+          type: "swarm",
+          monsterType: "Abhuman", // Which monster to spawn
+          count: 6, // How many to spawn
+          range: 18, // Spawn within 5 tiles of the object
+        },
+      ],
+    },
+    {
+      name: "Shroud of Silence",
+      shortName: "shroud",
+      position: { row: 385, col: 195 },
+      description: "A mystical cloak that renders the wearer unseen.",
+      active: true,
+      type: "object",
+      maxInstances: 1,
+      effects: [
+        {
+          type: "hide",
+          duration: 5, // Hides Christos for 5 turns
+        },
+      ],
+    },
   ],
   pools: [
     {
@@ -107,14 +142,20 @@ export const initialState = {
     },
   ],
   poolsTemplate: {
+    // Refactor Pool of Peace to use effects
     name: "Pool of Peace",
     shortName: "poolOfPeace",
-    size: { width: 4, height: 4 }, // 160px x 160px
-    description:
-      "A tranquil pool glows faintly, offering peace amidst the desolation of the Nightland.",
+    size: { width: 4, height: 4 },
+    description: "A tranquil pool that restores vitality.",
     active: true,
     type: "object",
-    maxInstances: 5, // Limit to 5 for now (adjust as needed)
+    maxInstances: 5,
+    effects: [
+      {
+        type: "heal",
+        amount: 20, // Heals 20 HP
+      },
+    ],
   },
   footsteps: [
     {
@@ -126,7 +167,7 @@ export const initialState = {
       id: 2,
       position: { row: 391, col: 130 }, // Halfway to left edge
       direction: 250, // Points left
-    },    
+    },
     {
       id: 3,
       position: { row: 385, col: 70 }, // Halfway to left edge
@@ -259,12 +300,100 @@ export const reducer = (state = initialState, action) => {
           state.poolsTemplate.maxInstances
         ),
       };
-      case "RESET_HP":
-        console.log("Reducer - Resetting HP to", state.player.maxHp, "from", state.player.hp);
-         return {
+    case "RESET_HP":
+      console.log(
+        "Reducer - Resetting HP to",
+        state.player.maxHp,
+        "from",
+        state.player.hp
+      );
+      return {
         ...state,
         player: { ...state.player, hp: state.player.maxHP },
       };
+
+    case "TRIGGER_EFFECT":
+      const { effect, position } = action.payload;
+      switch (effect.type) {
+        case "swarm":
+          const newMonsters = [];
+          const monsterTemplate = state.monsters.find(
+            (m) => m.name === effect.monsterType
+          );
+          for (let i = 0; i < effect.count; i++) {
+            const spawnRow = Math.max(
+              0,
+              Math.min(
+                state.gridHeight - 1,
+                position.row +
+                  Math.floor(Math.random() * effect.range * 2) -
+                  effect.range
+              )
+            );
+            const spawnCol = Math.max(
+              0,
+              Math.min(
+                state.gridWidth - 1,
+                position.col +
+                  Math.floor(Math.random() * effect.range * 2) -
+                  effect.range
+              )
+            );
+            newMonsters.push({
+              ...monsterTemplate,
+              id: `${monsterTemplate.shortName}-${Date.now()}-${i}`,
+              hp: monsterTemplate.hp,
+              position: { row: spawnRow, col: spawnCol },
+              active: true,
+            });
+          }
+          return {
+            ...state,
+            activeMonsters: [...state.activeMonsters, ...newMonsters],
+          };
+
+        case "hide":
+          return {
+            ...state,
+            player: {
+              ...state.player,
+              isHidden: true,
+              hideTurns: effect.duration,
+            },
+          };
+
+        case "heal":
+          return {
+            ...state,
+            player: {
+              ...state.player,
+              hp: Math.min(state.player.maxHP, state.player.hp + effect.amount),
+            },
+          };
+
+        default:
+          return state;
+      }
+
+    case "DECREMENT_HIDE_TURNS":
+      const newHideTurns = Math.max(0, state.player.hideTurns - 1);
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          hideTurns: newHideTurns,
+          isHidden: newHideTurns > 0, // Turn off hiding when turns run out
+        },
+      };
+      case "UPDATE_OBJECT":
+        return {
+          ...state,
+          objects: state.objects.map((obj) =>
+            obj.shortName === action.payload.shortName
+              ? { ...obj, ...action.payload.updates }
+              : obj
+          ),
+        };
     default:
       console.warn(`Unhandled action type: ${action.type}`);
       return state || initialState;

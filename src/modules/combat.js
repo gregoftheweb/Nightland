@@ -3,75 +3,113 @@ import { moveMonsters, checkMonsterSpawn } from "./gameLoop";
 import * as textContent from "../assets/copy/textcontent";
 import { initialState } from "./gameState";
 
+
+
 export const combatStep = (state, dispatch, setLastAction = () => {}) => {
   let newTurnOrder = [state.player, ...state.attackSlots];
   let newCombatTurn = state.combatTurn;
   let newAttackSlots = [...state.attackSlots];
   let newWaitingMonsters = [...state.waitingMonsters];
 
-  if (
-    state.combatTurn === null ||
-    (state.combatTurn && state.combatTurn.name === state.player.name)
-  ) {
-    const target = newAttackSlots[0];
-    if (target) {
-      const damage = Math.floor(Math.random() * 20) + 5;
-      const newHP = Math.max(0, target.hp - damage);
+  // If Christos is hidden, enemies skip their turns, and combat may end
+  if (state.player.isHidden) {
+    // If it's the player's turn, allow it to proceed (e.g., to end combat manually)
+    if (state.combatTurn && state.combatTurn.name === state.player.name) {
+      const target = newAttackSlots[0];
+      if (target) {
+        const damage = Math.floor(Math.random() * 20) + 5;
+        const newHP = Math.max(0, target.hp - damage);
 
-      if (damage > 1) {
-        setLastAction({ type: "PLAYER_HIT", damage });
-        if (newHP <= 0) {
-          setLastAction({ type: "ENEMY_DEATH" });
+        if (damage > 1) {
+          setLastAction({ type: "PLAYER_HIT", damage });
+          if (newHP <= 0) {
+            setLastAction({ type: "ENEMY_DEATH" });
+          }
+        } else {
+          setLastAction({ type: "PLAYER_MISS" });
         }
-      } else {
-        setLastAction({ type: "PLAYER_MISS" });
+
+        newAttackSlots = newAttackSlots.map((slot) =>
+          slot.id === target.id ? { ...slot, hp: newHP } : slot
+        );
+        dispatch({
+          type: "UPDATE_MONSTER_HP",
+          payload: { id: target.id, hp: newHP },
+        });
       }
-
-      newAttackSlots = newAttackSlots.map((slot) =>
-        slot.id === target.id ? { ...slot, hp: newHP } : slot
-      );
-      dispatch({
-        type: "UPDATE_MONSTER_HP",
-        payload: { id: target.id, hp: newHP },
-      });
-    }
-    newCombatTurn = newAttackSlots.length > 0 ? newAttackSlots[0] : null;
-  } else {
-    const enemy = newAttackSlots.find((e) => e === state.combatTurn);
-    if (enemy && enemy.hp > 0) {
-      const damage = Math.floor(Math.random() * enemy.attack) + 1;
-      const newPlayerHP = Math.max(0, state.player.hp - damage);
-
-      if (damage > 1) {
-        setLastAction({ type: "ENEMY_HIT", damage });
-        if (newPlayerHP <= 0) {
-          const deathMessageKey = `combatChristosDeath${enemy.shortName}`; // Use shortName
-          const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
-          setLastAction({ type: "PLAYER_DEATH", message: deathMessage });
-        }
-      } else {
-        setLastAction({ type: "ENEMY_MISS" });
-      }
-
-      dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: newPlayerHP } });
-
-      if (newPlayerHP <= 0) {
-        resetChristos(state, dispatch);
-        return;
-      }
-    } else if (enemy && enemy.hp <= 0) {
-      // No action needed here
-    }
-
-    const currentIndex = newAttackSlots.indexOf(state.combatTurn);
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < newAttackSlots.length) {
-      newCombatTurn = newAttackSlots[nextIndex];
+      newCombatTurn = newAttackSlots.length > 0 ? newAttackSlots[0] : null;
     } else {
-      newCombatTurn = state.player;
+      // If it's an enemy's turn, skip it and move to the next turn (player's turn)
+      setLastAction({ type: "ENEMY_SKIP", message: "The enemy cannot find you!" });
+      newCombatTurn = state.player; // Reset to player’s turn
+    }
+  } else {
+    // Normal combat flow when not hidden
+    if (
+      state.combatTurn === null ||
+      (state.combatTurn && state.combatTurn.name === state.player.name)
+    ) {
+      const target = newAttackSlots[0];
+      if (target) {
+        const damage = Math.floor(Math.random() * 20) + 5;
+        const newHP = Math.max(0, target.hp - damage);
+
+        if (damage > 1) {
+          setLastAction({ type: "PLAYER_HIT", damage });
+          if (newHP <= 0) {
+            setLastAction({ type: "ENEMY_DEATH" });
+          }
+        } else {
+          setLastAction({ type: "PLAYER_MISS" });
+        }
+
+        newAttackSlots = newAttackSlots.map((slot) =>
+          slot.id === target.id ? { ...slot, hp: newHP } : slot
+        );
+        dispatch({
+          type: "UPDATE_MONSTER_HP",
+          payload: { id: target.id, hp: newHP },
+        });
+      }
+      newCombatTurn = newAttackSlots.length > 0 ? newAttackSlots[0] : null;
+    } else {
+      const enemy = newAttackSlots.find((e) => e === state.combatTurn);
+      if (enemy && enemy.hp > 0) {
+        const damage = Math.floor(Math.random() * enemy.attack) + 1;
+        const newPlayerHP = Math.max(0, state.player.hp - damage);
+
+        if (damage > 1) {
+          setLastAction({ type: "ENEMY_HIT", damage });
+          if (newPlayerHP <= 0) {
+            const deathMessageKey = `combatChristosDeath${enemy.shortName}`;
+            const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
+            setLastAction({ type: "PLAYER_DEATH", message: deathMessage });
+          }
+        } else {
+          setLastAction({ type: "ENEMY_MISS" });
+        }
+
+        dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: newPlayerHP } });
+
+        if (newPlayerHP <= 0) {
+          resetChristos(state, dispatch);
+          return;
+        }
+      } else if (enemy && enemy.hp <= 0) {
+        // No action needed here
+      }
+
+      const currentIndex = newAttackSlots.indexOf(state.combatTurn);
+      const nextIndex = currentIndex + 1;
+      if (nextIndex < newAttackSlots.length) {
+        newCombatTurn = newAttackSlots[nextIndex];
+      } else {
+        newCombatTurn = state.player;
+      }
     }
   }
 
+  // Clean up dead monsters
   const deadMonsterIds = newAttackSlots
     .filter((slot) => slot.hp <= 0)
     .map((slot) => slot.id);
@@ -133,6 +171,7 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
     );
   }
 };
+
 
 const moveWaitingMonsters = (state, dispatch, attackSlots, waitingMonsters) => {
   if (!waitingMonsters || !Array.isArray(waitingMonsters)) {

@@ -7,7 +7,7 @@ yarn-error.log
 # Build directories
 /dist/
 /build/
-/public/
+#/public/
 
 # Logs
 *.log
@@ -48,6 +48,7 @@ coverage/
 .bower_components/
 
 # Package lock
+package-lock.json
 package-lock.json
 yarn.lock
 

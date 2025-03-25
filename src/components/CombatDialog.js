@@ -23,10 +23,18 @@ const CombatDialog = ({ state, lastAction }) => {
         return `${combatPlayerHitComment.replace("6", lastAction.damage)}`;
       case "PLAYER_MISS":
         return combatPlayerMissComment;
-      case "ENEMY_HIT":
-        return `${combatEnemyHitComment.replace("4", lastAction.damage)}`;
+      case "ENEMY_HIT": {
+        // Find the attacking monster
+        const attackingMonster =
+          state.attackSlots.find((slot) => slot.id === state.combatTurn?.id) ||
+          state.attackSlots[0]; // Fallback to first attacker if combatTurn is unclear
+        const monsterName = attackingMonster?.name || "Unknown Creature";
+        return `${monsterName} hit you for ${lastAction.damage} points!`;
+      }
       case "ENEMY_MISS":
         return combatEnemyMissComment;
+      case "ENEMY_SKIP":
+        return "The enemy cannot find you!";
       case "PLAYER_VICTORY":
         return combatVictoryPlayerComment;
       case "ENEMY_VICTORY":
