@@ -20,7 +20,7 @@ const Dialog = ({ children, onClose, showCloseButton = true, duration = 5000 }) 
         <button
           className="dialog-close-button"
           onClick={onClose}
-          style={{ position: "absolute", top: "5px", right: "5px" }}
+          style={{ position: "absolute", top: "5px", right: "5px",  color: "#8b0000" }}
         >
           X
         </button>

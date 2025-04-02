@@ -77,21 +77,43 @@ export const handleMovePlayer = (
 
   // Check for objects with effects at the new position, considering size
   const objectAtPosition = state.objects.find((obj) => {
-    const objRowStart = obj.position.row;
-    const objColStart = obj.position.col;
-    const objWidth = obj.size?.width || 1;
-    const objHeight = obj.size?.height || 1;
-    const objRowEnd = objRowStart + objHeight - 1;
-    const objColEnd = objColStart + objWidth - 1;
+    if (!obj.active) return false;
 
-    return (
-      obj.active &&
-      newPosition.row >= objRowStart &&
-      newPosition.row <= objRowEnd &&
-      newPosition.col >= objColStart &&
-      newPosition.col <= objColEnd
-    );
+    // Use collisionMask if present, otherwise fall back to full size
+    if (obj.collisionMask) {
+      return obj.collisionMask.some((mask) => {
+        const objRowStart = obj.position.row + mask.row;
+        const objColStart = obj.position.col + mask.col;
+        const objRowEnd = objRowStart + (mask.height || 1) - 1;
+        const objColEnd = objColStart + (mask.width || 1) - 1;
+
+        return (
+          newPosition.row >= objRowStart &&
+          newPosition.row <= objRowEnd &&
+          newPosition.col >= objColStart &&
+          newPosition.col <= objColEnd
+        );
+      });
+    } else {
+      const objRowStart = obj.position.row;
+      const objColStart = obj.position.col;
+      const objWidth = obj.size?.width || 1;
+      const objHeight = obj.size?.height || 1;
+      const objRowEnd = objRowStart + objHeight - 1;
+      const objColEnd = objColStart + objWidth - 1;
+
+      return (
+        newPosition.row >= objRowStart &&
+        newPosition.row <= objRowEnd &&
+        newPosition.col >= objColStart &&
+        newPosition.col <= objColEnd
+      );
+    }
   });
+
+  if (objectAtPosition) {
+    console.log("Collided with:", objectAtPosition.name, "at", newPosition);
+  }
 
   if (objectAtPosition && objectAtPosition.effects) {
     const now = Date.now();

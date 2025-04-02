@@ -72,18 +72,33 @@ export const level1State = {
       {
         name: "River of Shadows",
         shortName: "river",
-        position: { row: 370, col: 175 },
+        position: { row: 330, col: 175 },
         size: { width: 20, height: 20 },
         description:
           "A vast, dark river snakes through the Outer Wastes, its shimmering waters whispering of ancient secrets.",
         active: true,
         type: "object",
         maxInstances: 1,
+        collisionMask: [
+          { row: 1, col: 0, width: 1, height: 1 },  
+          { row: 2, col: 0, width:2, height: 1 },   
+          { row: 3, col: 1, width: 3, height: 2 },   
+          { row: 2, col: 4, width: 4, height: 2 },   
+          { row: 3, col: 8, width: 1, height: 2 },   
+          { row: 3, col: 9, width: 1, height: 3 },   
+          { row: 5, col: 10, width: 2, height: 2 },  
+          { row: 6, col: 12, width: 2, height: 3 },  
+          { row: 9, col: 13, width: 2, height: 1 },  
+          { row: 10, col: 14, width: 4, height: 1 },  
+          { row: 11, col: 17, width: 2, height: 1 },  
+          { row: 12, col: 17, width: 2, height: 3 },  
+          { row: 15, col: 18, width: 2, height: 5 },  
+        ]
       },
       {
         name: "Cursed Totem",
         shortName: "cursedTotem",
-        position: { row: 390, col: 190 },
+        position: { row: 340, col: 60 },
         size: { width: 4, height: 4 },
         description:
           "A twisted relic that calls forth the horrors of the Night Land.",
@@ -116,7 +131,7 @@ export const level1State = {
         ],
       },
     ],
-    items: [ // New array for collectible items
+    items: [ // array for collectible items
       {
         name: "Maguffin Rock",
         shortName: "maguffinRock",

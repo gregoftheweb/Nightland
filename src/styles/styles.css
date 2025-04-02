@@ -130,6 +130,12 @@ html {
   z-index: 0; /* Bottom of the stack (was 801) */
 }
 
+.collision-mask {
+  background-color: rgba(255, 0, 0, 0.3); /* Semi-transparent red */
+  border: 1px solid rgba(255, 0, 0, 0.8); /* Slightly darker red border */
+  pointer-events: none; /* Prevent the mask from blocking clicks on the object */
+}
+
 .river {
   position: absolute;
   width: 25px; /* 50 tiles wide (50 * 40px) */
@@ -405,13 +411,46 @@ html {
   width: 300px;
   background-color: rgba(0, 0, 0, 0.9);
   border: 2px solid #8b0000;
-  padding: 15px;
+  padding: 10px;
   color: #ff0000; /* Bright red text for emphasis */
   font-family: "Quintessential", cursive;
   font-size: 20px;
   text-align: center;
   z-index: 1003; /* Above other dialogs */
 }
+.game-dialog h3 {
+  margin: 0 0 5px 0; /* Reduced bottom margin for tighter spacing */
+  color: #8b0000;
+  font-size: 16px; /* Smaller font */
+  font-weight: bold;
+}
+.game-dialog ul {
+  list-style: none;
+  padding: 0;
+  margin: 0; /* No extra margin */
+}
+
+.game-dialog li {
+  color: #8b0000;
+  font-size: 14px; /* Smaller font */
+  margin-bottom: 2px; /* Tight spacing between items */
+  line-height: 1.2; /* Reduced line height */
+}
+
+.game-dialog .drop-prompt {
+  margin-top: 5px; /* Small gap before prompt */
+  font-size: 14px; /* Match item font size */
+  color: #8b0000;
+}
+.drop-divider {
+  border: none;
+  height: 8px; /* Taller to show pattern */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='8' viewBox='0 0 20 8'%3E%3Cpath d='M0 4 Q5 0 10 4 Q15 8 20 4' stroke='%238b0000' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  margin: 15px 10px 10px 0px;
+}
+
+
 /* nightland/src/styles/styles.css */
 .dialog-close-button {
   background: none;

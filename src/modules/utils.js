@@ -165,3 +165,45 @@ export function moveToward(entity, targetRow, targetCol, speed = 1, gridWidth = 
   export function updateStatusBar(player) {
     return { hp: player.hp };
   }
+
+  // nightland/src/modules/utils.js
+export const isClickWithinBounds = (event, gameBoard, object, tileSize) => {
+  // Get the click coordinates relative to the game board
+  const clickX = event.clientX - gameBoard.left;
+  const clickY = event.clientY - gameBoard.top;
+
+  // Convert pixel coordinates to tile coordinates
+  const clickCol = Math.floor(clickX / tileSize);
+  const clickRow = Math.floor(clickY / tileSize);
+
+  // Adjust for the object's position to get relative coordinates
+  const relativeRow = clickRow - object.position.row;
+  const relativeCol = clickCol - object.position.col;
+
+  // If there's a collisionMask, check if the click is within it
+  if (object.collisionMask) {
+    return object.collisionMask.some((mask) => {
+      const maskRowStart = mask.row;
+      const maskColStart = mask.col;
+      const maskRowEnd = maskRowStart + (mask.height || 1) - 1;
+      const maskColEnd = maskColStart + (mask.width || 1) - 1;
+
+      return (
+        relativeRow >= maskRowStart &&
+        relativeRow <= maskRowEnd &&
+        relativeCol >= maskColStart &&
+        relativeCol <= maskColEnd
+      );
+    });
+  }
+
+  // If no collisionMask, check the full bounding box
+  const objWidth = object.size?.width || 1;
+  const objHeight = object.size?.height || 1;
+  return (
+    relativeRow >= 0 &&
+    relativeRow < objHeight &&
+    relativeCol >= 0 &&
+    relativeCol < objWidth
+  );
+};

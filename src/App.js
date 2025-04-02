@@ -17,7 +17,11 @@ import DeathDialog from "./components/DeathDialog";
 import Dialog from "./components/Dialog";
 import SettingsMenu from "./components/SettingsMenu";
 import { handleMovePlayer } from "./modules/gameLoop";
-import { initializeEntityStyles, updateViewport } from "./modules/utils";
+import {
+  isClickWithinBounds,
+  initializeEntityStyles,
+  updateViewport,
+} from "./modules/utils";
 import "./styles/styles.css";
 
 const App = () => {
@@ -28,8 +32,9 @@ const App = () => {
   const [soloDeathAction, setSoloDeathAction] = useState(null);
   const [deathMessage, setDeathMessage] = useState(""); // Descriptions/death
   const [deathCount, setDeathCount] = useState(0);
-  const [sfxEnabled, setSfxEnabled] = useState(true);
+  const [sfxEnabled, setSfxEnabled] = useState(false);
   const [isDropping, setIsDropping] = useState(false);
+  const [showCollisionMask, setShowCollisionMask] = useState(true); // Add this state
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
   const audioRef = useRef(null);
@@ -96,13 +101,20 @@ const App = () => {
     if (state.player.inventory.length === 0) {
       showDialog("Inventory is empty.", 3000);
     } else {
-      const inventoryList = state.player.inventory
-        .map(
-          (item, index) => `${index + 1}. ${item.name} - ${item.description}`
-        )
-        .join("\n");
       showDialog(
-        `Inventory (${state.player.inventory.length}/${state.player.maxInventorySize}):\n${inventoryList}`,
+        <div>
+          <h3>
+            Inventory ({state.player.inventory.length}/
+            {state.player.maxInventorySize})
+          </h3>
+          <ul>
+            {state.player.inventory.map((item, index) => (
+              <li key={item.id}>
+                {index + 1}. {item.name}
+              </li>
+            ))}
+          </ul>
+        </div>,
         5000
       );
     }
@@ -113,10 +125,24 @@ const App = () => {
       showDialog("Inventory is empty. Nothing to drop.", 3000);
       setIsDropping(false);
     } else {
-      const dropList = state.player.inventory
-        .map((item, index) => `${index + 1}. ${item.name}`)
-        .join("\n");
-      showDialog(`${dropItemPrompt}:\n${dropList}`, 15000);
+      showDialog(
+        <div>
+          <h3>
+            Inventory ({state.player.inventory.length}/
+            {state.player.maxInventorySize})
+          </h3>
+          <ul>
+            {state.player.inventory.map((item, index) => (
+              <li key={item.id}>
+                {index + 1}. {item.name}
+              </li>
+            ))}
+          </ul>
+          <hr className="drop-divider" />
+          <p className="drop-prompt">{dropItemPrompt}</p>
+        </div>,
+        15000
+      );
       setIsDropping(true);
     }
   }, [state.player.inventory, showDialog]);
@@ -236,39 +262,76 @@ const App = () => {
                     onClick={() => showEntityDescription(power.description)}
                   />
                 ))}
+
               {state.objects &&
-                state.objects.map((object) => (
-                  <div
-                    key={object.shortName}
-                    id={object.shortName}
-                    className={object.shortName}
-                    style={{
-                      left: `${object.position.col * state.tileSize}px`,
-                      top: `${object.position.row * state.tileSize}px`,
-                      position: "absolute",
-                      width: `${(object.size?.width || 1) * state.tileSize}px`,
-                      height: `${
-                        (object.size?.height || 1) * state.tileSize
-                      }px`,
-                      transform: `rotate(${object.direction || 0}deg)`,
-                      transformOrigin: "center center",
-                    }}
-                    onClick={() => showEntityDescription(object.description)}
-                  />
-                ))}
+                state.objects.map((object) => {
+                  const handleObjectClick = (event) => {
+                    const gameBoard =
+                      event.currentTarget.parentElement.getBoundingClientRect();
+                    const isWithinBounds = isClickWithinBounds(
+                      event,
+                      gameBoard,
+                      object,
+                      state.tileSize
+                    );
+
+                    if (!isWithinBounds) return; // Don't show description if click is outside bounds
+
+                    showEntityDescription(object.description);
+                  };
+
+                  return (
+                    <React.Fragment key={object.shortName}>
+                      <div
+                        id={object.shortName}
+                        className={object.shortName}
+                        style={{
+                          left: `${object.position.col * state.tileSize}px`,
+                          top: `${object.position.row * state.tileSize}px`,
+                          position: "absolute",
+                          width: `${
+                            (object.size?.width || 1) * state.tileSize
+                          }px`,
+                          height: `${
+                            (object.size?.height || 1) * state.tileSize
+                          }px`,
+                          transform: `rotate(${object.direction || 0}deg)`,
+                          transformOrigin: "center center",
+                        }}
+                        onClick={handleObjectClick}
+                      />
+                      {showCollisionMask &&
+                        object.collisionMask &&
+                        object.collisionMask.map((mask, index) => (
+                          <div
+                            key={`${object.shortName}-mask-${index}`}
+                            className="collision-mask"
+                            style={{
+                              left: `${
+                                (object.position.col + mask.col) *
+                                state.tileSize
+                              }px`,
+                              top: `${
+                                (object.position.row + mask.row) *
+                                state.tileSize
+                              }px`,
+                              position: "absolute",
+                              width: `${(mask.width || 1) * state.tileSize}px`,
+                              height: `${
+                                (mask.height || 1) * state.tileSize
+                              }px`,
+                              zIndex: 1000,
+                            }}
+                          />
+                        ))}
+                    </React.Fragment>
+                  );
+                })}
 
               {state.items &&
                 state.items
                   .filter((item) => item.active)
                   .map((item) => {
-                    console.log(
-                      "Rendering item:",
-                      item.shortName,
-                      "at",
-                      item.position,
-                      "active:",
-                      item.active
-                    );
                     return (
                       <div
                         key={item.shortName} // Potential issue: duplicate keys
