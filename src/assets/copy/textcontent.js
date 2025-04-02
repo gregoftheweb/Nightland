@@ -22,3 +22,6 @@ export const combatChristosDeathDefault = "A monstrous foe has ended your journe
 
 export const deathReviveMessage = "You awaken in the Redoubt.";
 export const settingsSFXLabel = "SFX: ";
+
+// New: Drop prompt
+export const dropItemPrompt = "Please type the number of the item to drop";

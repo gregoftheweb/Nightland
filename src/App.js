@@ -1,4 +1,4 @@
-// nightland/src/App.js (updated)
+// nightland/src/App.js
 import React, {
   useReducer,
   useState,
@@ -7,6 +7,8 @@ import React, {
   useRef,
 } from "react";
 import { initialState, reducer } from "./modules/gameState";
+import { gamePreferences } from "./modules/gamePreferences"; // New: Import preferences
+import { dropItemPrompt } from "./assets/copy/textcontent"; // New import
 import SplashScreen from "./components/SplashScreen";
 import PrincessScreen from "./components/PrincessScreen";
 import StatusBar from "./components/StatusBar";
@@ -28,6 +30,7 @@ const App = () => {
   const [deathMessage, setDeathMessage] = useState("");
   const [deathCount, setDeathCount] = useState(0);
   const [sfxEnabled, setSfxEnabled] = useState(true);
+  const [isDropping, setIsDropping] = useState(false); // New: Track drop mode
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
   const audioRef = useRef(null);
@@ -51,7 +54,6 @@ const App = () => {
       }
     }
   }, [sfxEnabled]);
-
 
   useEffect(() => {
     console.log("App.js - Player HP:", state.player.hp);
@@ -79,7 +81,7 @@ const App = () => {
       description: "No level data available.",
     };
     const levelMessage = `${currentLevel.name}\n${currentLevel.description}`;
-    showDialog(levelMessage, 10000); // 10s duration to match .fade-out8
+    showDialog(levelMessage, 10000);
   };
 
   const handleMovePlayerWithDeath = (state, dispatch, key) =>
@@ -88,25 +90,71 @@ const App = () => {
       setDeathCount((prev) => prev + 1);
     });
 
+  // New function to display inventory
+  const showInventory = useCallback(() => {
+    if (state.player.inventory.length === 0) {
+      showDialog("Inventory is empty.", 3000);
+    } else {
+      const inventoryList = state.player.inventory
+        .map(
+          (item, index) => `${index + 1}. ${item.name} - ${item.description}`
+        )
+        .join("\n");
+      showDialog(
+        `Inventory (${state.player.inventory.length}/${state.player.maxInventorySize}):\n${inventoryList}`,
+        5000
+      );
+    }
+  }, [state.player.inventory, state.player.maxInventorySize, showDialog]);
+
+  const showDropMenu = useCallback(() => {
+    if (state.player.inventory.length === 0) {
+      showDialog("Inventory is empty. Nothing to drop.", 3000);
+      setIsDropping(false);
+    } else {
+      const dropList = state.player.inventory
+        .map((item, index) => `${index + 1}. ${item.name}`)
+        .join("\n");
+      showDialog(`${dropItemPrompt}:\n${dropList}`, 15000); // 15 seconds
+      setIsDropping(true);
+    }
+  }, [state.player.inventory, showDialog]);
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (phase === "gameplay") {
         event.preventDefault();
+        const { keys } = gamePreferences;
+
         if (
-          ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(
-            event.key
-          )
+          event.key === keys.moveUp ||
+          event.key === keys.moveDown ||
+          event.key === keys.moveLeft ||
+          event.key === keys.moveRight
         ) {
           handleMovePlayerWithDeath(state, dispatch, event.key);
           updateViewport(state);
-        } else if (event.key === " " && state.inCombat) {
+        } else if (event.key === keys.combatAction && state.inCombat) {
           if (combatStepRef.current) combatStepRef.current();
+        } else if (event.key === keys.showInventory) {
+          showInventory();
+        } else if (event.key === keys.dropItem) {
+          showDropMenu();
+        } else if (isDropping && /^[1-9]$/.test(event.key)) {
+          // Number keys 1-9
+          const index = parseInt(event.key, 10) - 1; // Convert to 0-based index
+          const itemToDrop = state.player.inventory[index];
+          if (itemToDrop) {
+            dispatch({ type: "DROP_ITEM", payload: { itemId: itemToDrop.id } });
+            showDialog(`Dropped ${itemToDrop.name}.`, 3000);
+            setIsDropping(false);
+          }
         }
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [state, phase, showDialog]);
+  }, [state, phase, showDialog, showInventory, showDropMenu, isDropping]);
 
   useEffect(() => {
     if (phase === "gameplay") {
@@ -172,16 +220,7 @@ const App = () => {
                 }}
                 onClick={() => showEntityDescription(state.player.description)}
               />
-              <div
-                id={state.redoubt.shortName}
-                className={state.redoubt.shortName}
-                style={{
-                  left: `${state.redoubt.position.col * state.tileSize}px`,
-                  top: `${state.redoubt.position.row * state.tileSize}px`,
-                  position: "absolute",
-                }}
-                onClick={() => showEntityDescription(state.redoubt.description)}
-              />
+              {/* Removed standalone redoubt rendering */}
               {state.greatPowers &&
                 state.greatPowers.map((power) => (
                   <div
@@ -196,6 +235,48 @@ const App = () => {
                     onClick={() => showEntityDescription(power.description)}
                   />
                 ))}
+              {state.objects &&
+                state.objects.map((object) => (
+                  <div
+                    key={object.shortName}
+                    id={object.shortName}
+                    className={object.shortName}
+                    style={{
+                      left: `${object.position.col * state.tileSize}px`,
+                      top: `${object.position.row * state.tileSize}px`,
+                      position: "absolute",
+                      width: `${(object.size?.width || 1) * state.tileSize}px`,
+                      height: `${
+                        (object.size?.height || 1) * state.tileSize
+                      }px`,
+                      transform: `rotate(${object.direction || 0}deg)`,
+                      transformOrigin: "center center",
+                    }}
+                    onClick={() => showEntityDescription(object.description)}
+                  />
+                ))}
+             
+{state.items &&
+  state.items
+    .filter((item) => item.active)
+    .map((item) => {
+      console.log("Rendering item:", item.shortName, "at", item.position, "active:", item.active);
+      return (
+        <div
+          key={item.shortName} // Potential issue: duplicate keys
+          id={item.shortName}
+          className={item.shortName}
+          style={{
+            left: `${item.position.col * state.tileSize}px`,
+            top: `${item.position.row * state.tileSize}px`,
+            position: "absolute",
+            width: `${(item.size?.width || 1) * state.tileSize}px`,
+            height: `${(item.size?.height || 1) * state.tileSize}px`,
+          }}
+          onClick={() => showEntityDescription(item.description)}
+        />
+      );
+    })}
               {state.activeMonsters &&
                 state.activeMonsters.map((monster) => {
                   const isInCombat = state.attackSlots.some(
@@ -242,26 +323,6 @@ const App = () => {
                     />
                   );
                 })}
-              {state.objects &&
-                state.objects.map((object) => (
-                  <div
-                    key={object.shortName}
-                    id={object.shortName}
-                    className={object.shortName}
-                    style={{
-                      left: `${object.position.col * state.tileSize}px`,
-                      top: `${object.position.row * state.tileSize}px`,
-                      position: "absolute",
-                      width: `${(object.size?.width || 1) * state.tileSize}px`,
-                      height: `${
-                        (object.size?.height || 1) * state.tileSize
-                      }px`,
-                      transform: `rotate(${object.direction || 0}deg)`, // Apply rotation
-                      transformOrigin: "center center", // Rotate around the center
-                    }}
-                    onClick={() => showEntityDescription(object.description)}
-                  />
-                ))}
               {state.pools &&
                 state.pools.map((pool) => {
                   const template = state.poolsTemplate;
@@ -283,7 +344,7 @@ const App = () => {
                     />
                   );
                 })}
-                             {state.footsteps &&
+              {state.footsteps &&
                 state.footsteps.map((step) => {
                   const template = state.footstepsTemplate;
                   return (

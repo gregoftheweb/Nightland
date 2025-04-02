@@ -2,12 +2,12 @@
 import React, { useEffect } from "react";
 import "../styles/styles.css";
 
-const Dialog = ({ message, onClose }) => {
+const Dialog = ({ message, onClose, showCloseButton = true }) => {
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
         onClose();
-      }, 5000); // 5 seconds
+      }, 5000); // Default 5 seconds, we’ll override for drop dialog
 
       return () => clearTimeout(timer);
     }
@@ -17,6 +17,15 @@ const Dialog = ({ message, onClose }) => {
 
   return (
     <div className="game-dialog fade-out8">
+      {showCloseButton && (
+        <button
+          className="dialog-close-button"
+          onClick={onClose}
+          style={{ position: "absolute", top: "5px", right: "5px" }}
+        >
+          X
+        </button>
+      )}
       <p>{message}</p>
     </div>
   );

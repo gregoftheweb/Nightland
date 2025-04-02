@@ -4,24 +4,76 @@ import * as textContent from "../assets/copy/textcontent";
 
 // nightland/src/modules/gameLoop.js
 
-
-
-export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessage) => {
+export const handleMovePlayer = (
+  state,
+  dispatch,
+  key,
+  showDialog,
+  setDeathMessage
+) => {
   if (state.inCombat) return;
 
   const newPosition = { ...state.player.position };
   switch (key) {
-    case "ArrowUp": newPosition.row = Math.max(0, newPosition.row - 1); break;
-    case "ArrowDown": newPosition.row = Math.min(state.gridHeight - 1, newPosition.row + 1); break;
-    case "ArrowLeft": newPosition.col = Math.max(0, newPosition.col - 1); break;
-    case "ArrowRight": newPosition.col = Math.min(state.gridWidth - 1, newPosition.col + 1); break;
-    default: return;
+    case "ArrowUp":
+      newPosition.row = Math.max(0, newPosition.row - 1);
+      break;
+    case "ArrowDown":
+      newPosition.row = Math.min(state.gridHeight - 1, newPosition.row + 1);
+      break;
+    case "ArrowLeft":
+      newPosition.col = Math.max(0, newPosition.col - 1);
+      break;
+    case "ArrowRight":
+      newPosition.col = Math.min(state.gridWidth - 1, newPosition.col + 1);
+      break;
+    default:
+      return;
   }
 
   // Move the player
   dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
 
-  const updatedState = { ...state, player: { ...state.player, position: newPosition } };
+  const updatedState = {
+    ...state,
+    player: { ...state.player, position: newPosition },
+  };
+
+  // Check for collectible items (NEW)
+  const itemAtPosition = state.items.find((item) => {
+    const itemRowStart = item.position.row;
+    const itemColStart = item.position.col;
+    const itemWidth = item.size?.width || 1;
+    const itemHeight = item.size?.height || 1;
+    const itemRowEnd = itemRowStart + itemHeight - 1;
+    const itemColEnd = itemColStart + itemWidth - 1;
+
+    return (
+      item.active &&
+      item.collectible &&
+      newPosition.row >= itemRowStart &&
+      newPosition.row <= itemRowEnd &&
+      newPosition.col >= itemColStart &&
+      newPosition.col <= itemColEnd
+    );
+  });
+
+  if (itemAtPosition) {
+    const item = {
+      id: `${itemAtPosition.shortName}-${Date.now()}`,
+      name: itemAtPosition.name,
+      description: itemAtPosition.description,
+    };
+    dispatch({ type: "ADD_TO_INVENTORY", payload: { item } });
+    showDialog(`Picked up ${item.name}!`, 3000);
+    dispatch({
+      type: "UPDATE_ITEM",
+      payload: {
+        shortName: itemAtPosition.shortName,
+        updates: { active: false },
+      },
+    });
+  }
 
   // Check for objects with effects at the new position, considering size
   const objectAtPosition = state.objects.find((obj) => {
@@ -44,7 +96,8 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
   if (objectAtPosition && objectAtPosition.effects) {
     const now = Date.now();
     const lastTrigger = objectAtPosition.lastTrigger || 0;
-    if (now - lastTrigger > 50000) { // 5-second cooldown
+    if (now - lastTrigger > 50000) {
+      // 5-second cooldown
       console.log("Collision with:", objectAtPosition, "at", newPosition);
       objectAtPosition.effects.forEach((effect) => {
         dispatch({
@@ -53,17 +106,29 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
         });
         switch (effect.type) {
           case "swarm":
-            showDialog(`A swarm of ${effect.monsterType}s emerges from the ${objectAtPosition.name}!`, 3000);
+            showDialog(
+              `A swarm of ${effect.monsterType}s emerges from the ${objectAtPosition.name}!`,
+              3000
+            );
             dispatch({
               type: "UPDATE_OBJECT",
-              payload: { shortName: objectAtPosition.shortName, updates: { lastTrigger: now } },
+              payload: {
+                shortName: objectAtPosition.shortName,
+                updates: { lastTrigger: now },
+              },
             });
             break;
           case "hide":
-            showDialog(`The ${objectAtPosition.name} cloaks you in silence.`, 3000);
+            showDialog(
+              `The ${objectAtPosition.name} cloaks you in silence.`,
+              3000
+            );
             break;
           case "heal":
-            showDialog(`The ${objectAtPosition.name} restores your strength!`, 3000);
+            showDialog(
+              `The ${objectAtPosition.name} restores your strength!`,
+              3000
+            );
             break;
           default:
             break;
@@ -106,7 +171,9 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
   }
 
   // Watcher collision check (already handles size)
-  const watcher = updatedState.greatPowers.find((power) => power.shortName === "watcherse");
+  const watcher = updatedState.greatPowers.find(
+    (power) => power.shortName === "watcherse"
+  );
   if (watcher) {
     const watcherLeft = watcher.position.col;
     const watcherTop = watcher.position.row;
@@ -122,7 +189,8 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
       newPosition.col <= watcherRight
     ) {
       const deathMessageKey = `combatChristosDeath${watcher.shortName}`;
-      const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
+      const deathMessage =
+        textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
 
       dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: 0 } });
       resetChristos(updatedState, dispatch);
@@ -147,12 +215,6 @@ export const handleMovePlayer = (state, dispatch, key, showDialog, setDeathMessa
     moveMonsters(finalState, dispatch, showDialog, newPosition);
   }
 };
-
-
-
-
-
-
 
 export const checkMonsterSpawn = (state, dispatch, showDialog) => {
   const currentLevel = state.levels.find((lvl) => lvl.id === state.level);
@@ -194,7 +256,7 @@ const getSpawnPosition = (playerPosition) => {
     spawnCol = Math.max(0, Math.min(gridWidth - 1, spawnCol));
     distance = Math.sqrt(
       Math.pow(spawnRow - playerPosition.row, 2) +
-      Math.pow(spawnCol - playerPosition.col, 2)
+        Math.pow(spawnCol - playerPosition.col, 2)
     );
   } while (distance < 5 || distance > 10); // 5-10 tiles away
   return { row: spawnRow, col: spawnCol };
