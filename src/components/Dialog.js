@@ -2,18 +2,17 @@
 import React, { useEffect } from "react";
 import "../styles/styles.css";
 
-const Dialog = ({ message, onClose, showCloseButton = true }) => {
+const Dialog = ({ children, onClose, showCloseButton = true, duration = 5000 }) => {
   useEffect(() => {
-    if (message) {
+    if (children && duration !== null) { // Allow null duration for no auto-close
       const timer = setTimeout(() => {
         onClose();
-      }, 5000); // Default 5 seconds, we’ll override for drop dialog
-
+      }, duration);
       return () => clearTimeout(timer);
     }
-  }, [message, onClose]);
+  }, [children, onClose, duration]);
 
-  if (!message) return null;
+  if (!children) return null;
 
   return (
     <div className="game-dialog fade-out8">
@@ -26,7 +25,7 @@ const Dialog = ({ message, onClose, showCloseButton = true }) => {
           X
         </button>
       )}
-      <p>{message}</p>
+      <div>{children}</div> 
     </div>
   );
 };

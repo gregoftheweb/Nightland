@@ -14,7 +14,6 @@ import PrincessScreen from "./components/PrincessScreen";
 import StatusBar from "./components/StatusBar";
 import CombatUI from "./components/CombatUI";
 import DeathDialog from "./components/DeathDialog";
-import GameDialog from "./components/GameDialog";
 import Dialog from "./components/Dialog";
 import SettingsMenu from "./components/SettingsMenu";
 import { handleMovePlayer } from "./modules/gameLoop";
@@ -25,12 +24,12 @@ const App = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [phase, setPhase] = useState("splash");
   const [showSettings, setShowSettings] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogMessage, setDialogMessage] = useState(""); // In-game messages
   const [soloDeathAction, setSoloDeathAction] = useState(null);
-  const [deathMessage, setDeathMessage] = useState("");
+  const [deathMessage, setDeathMessage] = useState(""); // Descriptions/death
   const [deathCount, setDeathCount] = useState(0);
   const [sfxEnabled, setSfxEnabled] = useState(true);
-  const [isDropping, setIsDropping] = useState(false); // New: Track drop mode
+  const [isDropping, setIsDropping] = useState(false);
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
   const audioRef = useRef(null);
@@ -66,9 +65,12 @@ const App = () => {
     setShowSettings(!showSettings);
   };
 
-  const showDialog = useCallback((message, duration = 3600) => {
-    setDialogMessage(message);
-    setTimeout(() => setDialogMessage(""), duration);
+  const showDialog = useCallback((content, duration = 3600) => {
+    setDialogMessage(content);
+    if (duration !== null) {
+      // Support no auto-close
+      setTimeout(() => setDialogMessage(""), duration);
+    }
   }, []);
 
   const showEntityDescription = (description) => setDeathMessage(description);
@@ -90,7 +92,6 @@ const App = () => {
       setDeathCount((prev) => prev + 1);
     });
 
-  // New function to display inventory
   const showInventory = useCallback(() => {
     if (state.player.inventory.length === 0) {
       showDialog("Inventory is empty.", 3000);
@@ -115,7 +116,7 @@ const App = () => {
       const dropList = state.player.inventory
         .map((item, index) => `${index + 1}. ${item.name}`)
         .join("\n");
-      showDialog(`${dropItemPrompt}:\n${dropList}`, 15000); // 15 seconds
+      showDialog(`${dropItemPrompt}:\n${dropList}`, 15000);
       setIsDropping(true);
     }
   }, [state.player.inventory, showDialog]);
@@ -255,28 +256,39 @@ const App = () => {
                     onClick={() => showEntityDescription(object.description)}
                   />
                 ))}
-             
-{state.items &&
-  state.items
-    .filter((item) => item.active)
-    .map((item) => {
-      console.log("Rendering item:", item.shortName, "at", item.position, "active:", item.active);
-      return (
-        <div
-          key={item.shortName} // Potential issue: duplicate keys
-          id={item.shortName}
-          className={item.shortName}
-          style={{
-            left: `${item.position.col * state.tileSize}px`,
-            top: `${item.position.row * state.tileSize}px`,
-            position: "absolute",
-            width: `${(item.size?.width || 1) * state.tileSize}px`,
-            height: `${(item.size?.height || 1) * state.tileSize}px`,
-          }}
-          onClick={() => showEntityDescription(item.description)}
-        />
-      );
-    })}
+
+              {state.items &&
+                state.items
+                  .filter((item) => item.active)
+                  .map((item) => {
+                    console.log(
+                      "Rendering item:",
+                      item.shortName,
+                      "at",
+                      item.position,
+                      "active:",
+                      item.active
+                    );
+                    return (
+                      <div
+                        key={item.shortName} // Potential issue: duplicate keys
+                        id={item.shortName}
+                        className={item.shortName}
+                        style={{
+                          left: `${item.position.col * state.tileSize}px`,
+                          top: `${item.position.row * state.tileSize}px`,
+                          position: "absolute",
+                          width: `${
+                            (item.size?.width || 1) * state.tileSize
+                          }px`,
+                          height: `${
+                            (item.size?.height || 1) * state.tileSize
+                          }px`,
+                        }}
+                        onClick={() => showEntityDescription(item.description)}
+                      />
+                    );
+                  })}
               {state.activeMonsters &&
                 state.activeMonsters.map((monster) => {
                   const isInCombat = state.attackSlots.some(
@@ -395,11 +407,18 @@ const App = () => {
               />
             )}
           </div>
-          <GameDialog message={dialogMessage} />
           <Dialog
-            key={deathCount}
-            message={deathMessage}
+            children={dialogMessage} // Replaces GameDialog
+            onClose={() => setDialogMessage("")}
+            showCloseButton={true}
+            duration={null} // Managed by showDialog
+          />
+          <Dialog
+            key={deathCount} // Unique key for death/description dialog
+            children={deathMessage}
             onClose={() => setDeathMessage("")}
+            showCloseButton={true}
+            duration={5000} // Default for descriptions
           />
           <audio
             id="background-audio"
