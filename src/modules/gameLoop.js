@@ -13,7 +13,10 @@ export const handleMovePlayer = (
 ) => {
   if (state.inCombat) return;
 
+  let isMove = true;
+
   const newPosition = { ...state.player.position };
+
   switch (key) {
     case "ArrowUp":
       newPosition.row = Math.max(0, newPosition.row - 1);
@@ -27,13 +30,17 @@ export const handleMovePlayer = (
     case "ArrowRight":
       newPosition.col = Math.min(state.gridWidth - 1, newPosition.col + 1);
       break;
+      case " ":
+        isMove = false;
+        break;
     default:
       return;
   }
 
   // Move the player
+  if(isMove){
   dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
-
+  }
   const updatedState = {
     ...state,
     player: { ...state.player, position: newPosition },

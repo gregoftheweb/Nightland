@@ -39,6 +39,13 @@ const App = () => {
   const combatStepRef = useRef(null);
   const audioRef = useRef(null);
 
+  const currentLevel = (state.levels || []).find(
+    (lvl) => lvl.id === state.level
+  ) || {
+    name: "Unknown Level",
+    description: "No level data available.",
+  };
+
   useEffect(() => {
     if (!state.inCombat && state.attackSlots.length === 0 && state.combatTurn) {
       const lastAction = { type: "ENEMY_DEATH" };
@@ -70,11 +77,13 @@ const App = () => {
     setShowSettings(!showSettings);
   };
 
-  const showDialog = useCallback((content, duration = 3600) => {
-    setDialogMessage(content);
-    if (duration !== null) {
-      // Support no auto-close
-      setTimeout(() => setDialogMessage(""), duration);
+  const showDialog = useCallback((message, duration, onClose) => {
+    setDialogMessage(message);
+    if (duration) {
+      setTimeout(() => {
+        setDialogMessage("");
+        if (onClose) onClose(); // Call the onClose callback
+      }, duration);
     }
   }, []);
 
@@ -101,30 +110,7 @@ const App = () => {
     if (state.player.inventory.length === 0) {
       showDialog("Inventory is empty.", 3000);
     } else {
-      showDialog(
-        <div>
-          <h3>
-            Inventory ({state.player.inventory.length}/
-            {state.player.maxInventorySize})
-          </h3>
-          <ul>
-            {state.player.inventory.map((item, index) => (
-              <li key={item.id}>
-                {index + 1}. {item.name}
-              </li>
-            ))}
-          </ul>
-        </div>,
-        5000
-      );
-    }
-  }, [state.player.inventory, state.player.maxInventorySize, showDialog]);
-
-  const showDropMenu = useCallback(() => {
-    if (state.player.inventory.length === 0) {
-      showDialog("Inventory is empty. Nothing to drop.", 3000);
-      setIsDropping(false);
-    } else {
+      setIsDropping(true);
       showDialog(
         <div>
           <h3>
@@ -141,11 +127,14 @@ const App = () => {
           <hr className="drop-divider" />
           <p className="drop-prompt">{dropItemPrompt}</p>
         </div>,
-        15000
+        5000,
+        () => setIsDropping(false) // Hypothetical callback when dialog closes
       );
-      setIsDropping(true);
+      
     }
-  }, [state.player.inventory, showDialog]);
+  }, [state.player.inventory, state.player.maxInventorySize, showDialog]);
+
+ 
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -157,16 +146,15 @@ const App = () => {
           event.key === keys.moveUp ||
           event.key === keys.moveDown ||
           event.key === keys.moveLeft ||
-          event.key === keys.moveRight
+          event.key === keys.moveRight ||
+          ((event.key === keys.spaceBar) && !state.inCombat)
         ) {
           handleMovePlayerWithDeath(state, dispatch, event.key);
           updateViewport(state);
-        } else if (event.key === keys.combatAction && state.inCombat) {
+        } else if (event.key === keys.spaceBar && state.inCombat) {
           if (combatStepRef.current) combatStepRef.current();
         } else if (event.key === keys.showInventory) {
           showInventory();
-        } else if (event.key === keys.dropItem) {
-          showDropMenu();
         } else if (isDropping && /^[1-9]$/.test(event.key)) {
           // Number keys 1-9
           const index = parseInt(event.key, 10) - 1; // Convert to 0-based index
@@ -181,7 +169,7 @@ const App = () => {
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [state, phase, showDialog, showInventory, showDropMenu, isDropping]);
+  }, [state, phase, showDialog, showInventory, isDropping]);
 
   useEffect(() => {
     if (phase === "gameplay") {
@@ -208,12 +196,7 @@ const App = () => {
     }
   };
 
-  const currentLevel = (state.levels || []).find(
-    (lvl) => lvl.id === state.level
-  ) || {
-    name: "Unknown Level",
-    description: "No level data available.",
-  };
+
 
   return (
     <div className="app">

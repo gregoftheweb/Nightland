@@ -9,6 +9,29 @@ export function moveToward(entity, targetRow, targetCol, speed = 1, gridWidth = 
     entity.position.col = Math.max(0, Math.min(gridWidth - 1, entity.position.col + stepsCol));
   }
   
+  export const moveAway = (monster, playerPosition, gridWidth, gridHeight) => {
+    const dx = monster.position.col - playerPosition.col;
+    const dy = monster.position.row - playerPosition.row;
+    let newRow = monster.position.row - Math.sign(dy); // Move away vertically
+    let newCol = monster.position.col - Math.sign(dx); // Move away horizontally
+  
+    // Ensure the new position is within bounds
+    newRow = Math.max(0, Math.min(gridHeight - 1, newRow));
+    newCol = Math.max(0, Math.min(gridWidth - 1, newCol));
+  
+    return { row: newRow, col: newCol };
+  };
+
+
+  export const disappearFarMonsters = (monsters, playerPosition, distanceThreshold = 20) => {
+    return monsters.filter((monster) => {
+      const dx = monster.position.col - playerPosition.col;
+      const dy = monster.position.row - playerPosition.row;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return distance <= distanceThreshold;
+    });
+  };
+
   export function initializeEntityStyles(state) {
     const tileSize = state.tileSize;
   

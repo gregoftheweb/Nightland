@@ -300,7 +300,7 @@ export const reducer = (state = initialState, action) => {
             player: {
               ...state.player,
               isHidden: true,
-              hideTurns: effect.duration,
+              hideTurns: effect.duration || 10,
             },
           };
         case "heal":

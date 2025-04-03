@@ -116,17 +116,18 @@ export const level1State = {
         ],
       },
       {
-        name: "Shroud of Silence",
-        shortName: "shroud",
+        name: "Petrified Willow",
+        shortName: "petWillow",
         position: { row: 385, col: 195 },
-        description: "A mystical cloak that renders the wearer unseen.",
+        size: { width: 4, height: 4 },
+        description: "Old woman willow is last tree in the Night Land, now a petrified husk, but it's drooping branches offer sancuary. It was once a great power, now merely a pocket of hope.",
         active: true,
         type: "object",
         maxInstances: 1,
         effects: [
           {
             type: "hide",
-            duration: 5,
+            duration: 10,
           },
         ],
       },

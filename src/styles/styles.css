@@ -192,7 +192,24 @@ html {
   height: 160px; /* 4 * 40 */
   background: url("../../public/assets/images/cursedtotem.png") no-repeat center center / contain;
   z-index: 802; /* Same as other static objects like poolOfPeace, below player/monsters */
+
 }
+
+.petWillow {
+  position: absolute;
+  width: 160px; /* 4 tiles * 40px - explicit match to gameState settings */
+  height: 160px; /* 4 * 40 */
+  background: url("../../public/assets/images/petrifiedWillow.png") no-repeat center center / contain;
+  z-index: 802; /* Same as other static objects like poolOfPeace, below player/monsters */
+  animation: sway 5s ease-in-out infinite;
+}
+
+@keyframes sway {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(2deg); }
+  100% { transform: rotate(0deg); }
+}
+
 .maguffinRock { /* Changed from .maguffinrock to .maguffinRock */
   width: 40px;
   height: 40px;

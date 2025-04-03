@@ -5,9 +5,8 @@ export const gamePreferences = {
       moveDown: "ArrowDown",
       moveLeft: "ArrowLeft",
       moveRight: "ArrowRight",
-      combatAction: " ", // Spacebar
+      spaceBar: " ", // Spacebar
       showInventory: "i",
-      dropItem: "x", // New: Drop action
     },
     // Add more preferences later (e.g., sound volume, tileSize, etc.)
   };
