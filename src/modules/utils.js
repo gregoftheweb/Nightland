@@ -12,8 +12,8 @@ export function moveToward(entity, targetRow, targetCol, speed = 1, gridWidth = 
   export const moveAway = (monster, playerPosition, gridWidth, gridHeight) => {
     const dx = monster.position.col - playerPosition.col;
     const dy = monster.position.row - playerPosition.row;
-    let newRow = monster.position.row - Math.sign(dy); // Move away vertically
-    let newCol = monster.position.col - Math.sign(dx); // Move away horizontally
+    let newRow = monster.position.row + Math.sign(dy); // Move away vertically
+    let newCol = monster.position.col + Math.sign(dx); // Move away horizontally
   
     // Ensure the new position is within bounds
     newRow = Math.max(0, Math.min(gridHeight - 1, newRow));

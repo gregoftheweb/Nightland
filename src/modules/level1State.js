@@ -78,7 +78,13 @@ export const level1State = {
           "A vast, dark river snakes through the Outer Wastes, its shimmering waters whispering of ancient secrets.",
         active: true,
         type: "object",
-        maxInstances: 1,
+        maxInstances: 1, 
+        effects: [
+          {
+            type: "hide",
+            duration: 10,
+          },
+        ],
         collisionMask: [
           { row: 1, col: 0, width: 1, height: 1 },  
           { row: 2, col: 0, width:2, height: 1 },   

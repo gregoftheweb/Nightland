@@ -1,6 +1,7 @@
 // nightland/src/modules/gameLoop.js (updated)
 import { resetChristos } from "./combat";
 import * as textContent from "../assets/copy/textcontent";
+import { moveAway, disappearFarMonsters } from "./utils"; // Add this import
 
 // nightland/src/modules/gameLoop.js
 
@@ -30,16 +31,18 @@ export const handleMovePlayer = (
     case "ArrowRight":
       newPosition.col = Math.min(state.gridWidth - 1, newPosition.col + 1);
       break;
-      case " ":
-        isMove = false;
-        break;
+    case " ":
+      isMove = false;
+      break;
     default:
+      console.log("handleMovePlayer - Unknown key, returning");
       return;
   }
 
   // Move the player
-  if(isMove){
-  dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
+  if (isMove) {
+    console.log("handleMovePlayer - Dispatching MOVE_PLAYER to:", newPosition);
+    dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
   }
   const updatedState = {
     ...state,
@@ -152,6 +155,7 @@ export const handleMovePlayer = (
               `The ${objectAtPosition.name} cloaks you in silence.`,
               3000
             );
+            console.log("handleMovePlayer - Triggering hide effect at:", newPosition);
             break;
           case "heal":
             showDialog(
@@ -240,9 +244,9 @@ export const handleMovePlayer = (
 
   // Monster spawning and movement (skip combat initiation if hidden)
   checkMonsterSpawn(finalState, dispatch, showDialog);
-  if (!finalState.player.isHidden) {
+  
     moveMonsters(finalState, dispatch, showDialog, newPosition);
-  }
+  
 };
 
 export const checkMonsterSpawn = (state, dispatch, showDialog) => {
@@ -291,6 +295,8 @@ const getSpawnPosition = (playerPosition) => {
   return { row: spawnRow, col: spawnCol };
 };
 
+
+
 export const moveMonsters = (
   state,
   dispatch,
@@ -300,60 +306,96 @@ export const moveMonsters = (
   if (state.inCombat) return;
 
   const playerPos = playerPosOverride || state.player.position;
+  console.log("moveMonsters - isHidden:", state.player.isHidden, "playerPos:", playerPos);
 
+  // First, handle movement for each monster
   state.activeMonsters.forEach((monster) => {
     if (
       state.attackSlots.some((slot) => slot.id === monster.id) ||
       state.waitingMonsters.some((m) => m.id === monster.id)
     ) {
+      console.log(`Monster ${monster.id} skipped (in attackSlots or waitingMonsters)`);
       return;
     }
 
-    const moveDistance = monster.moveRate;
-    let newPos = { ...monster.position };
-
-    if (monster.position.row < playerPos.row)
-      newPos.row = Math.min(monster.position.row + moveDistance, playerPos.row);
-    else if (monster.position.row > playerPos.row)
-      newPos.row = Math.max(monster.position.row - moveDistance, playerPos.row);
-    if (monster.position.col < playerPos.col)
-      newPos.col = Math.min(monster.position.col + moveDistance, playerPos.col);
-    else if (monster.position.col > playerPos.col)
-      newPos.col = Math.max(monster.position.col - moveDistance, playerPos.col);
-
-    newPos.row = Math.max(0, Math.min(state.gridHeight - 1, newPos.row));
-    newPos.col = Math.max(0, Math.min(state.gridWidth - 1, newPos.col));
-
-    if (checkCollision(newPos, playerPos)) {
-      setupCombat(state, dispatch, monster, showDialog, playerPos);
+    let newPos;
+    if (state.player.isHidden) {
+      console.log(`Monster ${monster.id} - Moving away from player. Current position:`, monster.position);
+      newPos = moveAway(monster, playerPos, state.gridWidth, state.gridHeight);
+      console.log(`Monster ${monster.id} - New position after moveAway:`, newPos);
     } else {
-      if (state.attackSlots.length >= state.maxAttackers) {
-        const distance = Math.sqrt(
-          Math.pow(newPos.row - playerPos.row, 2) +
+      console.log(`Monster ${monster.id} - Moving toward player. Current position:`, monster.position);
+      const moveDistance = monster.moveRate;
+      newPos = { ...monster.position };
+
+      if (monster.position.row < playerPos.row) {
+        newPos.row = Math.min(monster.position.row + moveDistance, playerPos.row);
+      } else if (monster.position.row > playerPos.row) {
+        newPos.row = Math.max(monster.position.row - moveDistance, playerPos.row);
+      }
+      if (monster.position.col < playerPos.col) {
+        newPos.col = Math.min(monster.position.col + moveDistance, playerPos.col);
+      } else if (monster.position.col > playerPos.col) {
+        newPos.col = Math.max(monster.position.col - moveDistance, playerPos.col);
+      }
+
+      newPos.row = Math.max(0, Math.min(state.gridHeight - 1, newPos.row));
+      newPos.col = Math.max(0, Math.min(state.gridWidth - 1, newPos.col));
+
+      if (checkCollision(newPos, playerPos)) {
+        if (!state.player.isHidden) {
+          console.log(`Monster ${monster.id} - Collision detected, setting up combat`);
+          setupCombat(state, dispatch, monster, showDialog, playerPos);
+        } else {
+          console.log(`Monster ${monster.id} - Collision detected, but player is hidden, no combat`);
+        }
+        return;
+      } else {
+        if (state.attackSlots.length >= state.maxAttackers) {
+          const distance = Math.sqrt(
+            Math.pow(newPos.row - playerPos.row, 2) + // Fixed from new Pos.row to newPos.row
             Math.pow(newPos.col - playerPos.col, 2)
-        );
-        if (distance <= 2) {
-          if (!state.waitingMonsters.some((m) => m.id === monster.id)) {
-            dispatch({
-              type: "UPDATE_WAITING_MONSTERS",
-              payload: {
-                waitingMonsters: [
-                  ...state.waitingMonsters,
-                  { ...monster, position: newPos },
-                ],
-              },
-            });
+          );
+          if (distance <= 2) {
+            if (!state.waitingMonsters.some((m) => m.id === monster.id)) {
+              console.log(`Monster ${monster.id} - Added to waitingMonsters at position:`, newPos);
+              dispatch({
+                type: "UPDATE_WAITING_MONSTERS",
+                payload: {
+                  waitingMonsters: [
+                    ...state.waitingMonsters,
+                    { ...monster, position: newPos },
+                  ],
+                },
+              });
+            }
+            return;
           }
-          return;
         }
       }
-      dispatch({
-        type: "MOVE_MONSTER",
-        payload: { id: monster.id, position: newPos },
-      });
+      console.log(`Monster ${monster.id} - New position after moving toward player:`, newPos);
     }
+
+    dispatch({
+      type: "MOVE_MONSTER",
+      payload: { id: monster.id, position: newPos },
+    });
   });
+
+  // After moving all monsters, remove those that are too far away
+  console.log("Before disappearFarMonsters - activeMonsters:", state.activeMonsters);
+  const filteredMonsters = disappearFarMonsters(state.activeMonsters, playerPos);
+  console.log("After disappearFarMonsters - filteredMonsters:", filteredMonsters);
+  if (filteredMonsters.length !== state.activeMonsters.length) {
+    console.log("Monster(s) disappeared due to distance.");
+    dispatch({
+      type: "UPDATE_ACTIVE_MONSTERS",
+      payload: { activeMonsters: filteredMonsters },
+    });
+  }
 };
+
+
 
 const checkCollision = (monsterPos, playerPos) => {
   return monsterPos.row === playerPos.row && monsterPos.col === playerPos.col;
