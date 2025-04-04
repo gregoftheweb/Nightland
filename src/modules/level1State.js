@@ -168,6 +168,10 @@ export const level1State = {
           type: "heal",
           amount: 20,
         },
+        {
+          type: "hide",
+          duration: 10,
+        },
       ],
     },
     footsteps: [

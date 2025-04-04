@@ -32,9 +32,9 @@ const App = () => {
   const [soloDeathAction, setSoloDeathAction] = useState(null);
   const [deathMessage, setDeathMessage] = useState(""); // Descriptions/death
   const [deathCount, setDeathCount] = useState(0);
-  const [sfxEnabled, setSfxEnabled] = useState(false);
+  const [sfxEnabled, setSfxEnabled] = useState(true);
   const [isDropping, setIsDropping] = useState(false);
-  const [showCollisionMask, setShowCollisionMask] = useState(true); // Add this state
+  const [showCollisionMask, setShowCollisionMask] = useState(false); // Add this state
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
   const audioRef = useRef(null);

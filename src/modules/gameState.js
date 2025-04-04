@@ -1,28 +1,6 @@
 // src/modules/gameState.js
 import { level1State } from "./level1State";
 
-export const poolsTemplate = {
-  name: "Pool of Peace",
-  shortName: "poolOfPeace",
-  size: { width: 4, height: 4 },
-  description: "A tranquil pool that restores vitality.",
-  active: true,
-  type: "object",
-  maxInstances: 5,
-  effects: [{ type: "heal", amount: 20 }],
-};
-
-export const footstepsTemplate = {
-  name: "Footsteps of Persius",
-  shortName: "footstepsPersius",
-  size: { width: 2, height: 2 },
-  description:
-    "You discover the faint tracks of your friend Persius in the dry dust of the Nightland. Your hope is forlorn, but meager as it is, there is some left that he might live..",
-  active: true,
-  type: "object",
-  maxInstances: 100,
-};
-
 export const getInitialState = (levelId = 1) => {
   const levelConfig = levelId === 1 ? level1State : level1State; // Default to level1State for now
   return {
@@ -47,15 +25,17 @@ export const getInitialState = (levelId = 1) => {
       attack: 10,
       inventory: [], // New: Inventory array for Christos
       maxInventorySize: 10, // Limit for general items (we’ll add weapons limit later)
+      isHidden: false, // Ensure this is initialized
+     hideTurns: 0,   // Ensure this is initialized
     },
     monsters: levelConfig.monsters,
     greatPowers: levelConfig.greatPowers,
     objects: levelConfig.objects,
     items: levelConfig.items, // New: Add items to state
     pools: levelConfig.pools,
-    poolsTemplate,
+    poolsTemplate: levelConfig.poolsTemplate,
     footsteps: levelConfig.footsteps,
-    footstepsTemplate,
+    footstepsTemplate: levelConfig.footstepsTemplate,
     activeMonsters: [],
     attackSlots: [],
     waitingMonsters: [],
@@ -88,9 +68,9 @@ export const reducer = (state = initialState, action) => {
         greatPowers: newLevelConfig.greatPowers,
         objects: newLevelConfig.objects,
         pools: newLevelConfig.pools,
-        poolsTemplate,
+        poolsTemplate: newLevelConfig.poolsTemplate,
         footsteps: newLevelConfig.footsteps,
-        footstepsTemplate,
+        footstepsTemplate: newLevelConfig.footstepsTemplate,
         activeMonsters: [],
         attackSlots: [],
         waitingMonsters: [],
