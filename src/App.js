@@ -223,7 +223,10 @@ const App = () => {
                   width: "40px",
                   height: "40px",
                 }}
-                onClick={() => showEntityDescription(state.player.description)}
+                onClick={() => {
+                  console.log("Christos SoulKey:", state.player.soulKey);
+                  showEntityDescription(state.player.description);
+                }}
               />
               {/* Removed standalone redoubt rendering */}
               {state.greatPowers &&
@@ -353,7 +356,10 @@ const App = () => {
                         width: "40px",
                         height: "40px",
                       }}
-                      onClick={() => showEntityDescription(monster.description)}
+                      onClick={() => {
+                        console.log(`${monster.name} SoulKey:`, monster.soulKey);
+                        showEntityDescription(monster.description);
+                      }}
                     />
                   );
                 })}

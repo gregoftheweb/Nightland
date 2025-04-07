@@ -2,6 +2,7 @@
 import { moveMonsters, checkMonsterSpawn } from "./gameLoop";
 import * as textContent from "../assets/copy/textcontent";
 import { initialState } from "./gameState";
+import { decodeSoulKey, getAttributeModifier } from "./utils"; // Add import
 
 export const combatStep = (state, dispatch, setLastAction = () => {}) => {
   let newTurnOrder = [state.player, ...state.attackSlots];
@@ -11,18 +12,22 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
 
   // Helper function for d20 attack roll with critical hit detection
   const rollD20Attack = (attacker, target) => {
-    const attackRoll = Math.floor(Math.random() * 20) + 1; // d20 roll (1-20)
-    const attackBonus = attacker.attack; // Base attack stat as bonus
-    const totalAttack = attackRoll + attackBonus; // Future: Add modifiers here
-    const isCrit = attackRoll === 20; // Critical hit on natural 20
+    const attackRoll = Math.floor(Math.random() * 20) + 1;
+    const attackBonus = attacker.attack;
+    const totalAttack = attackRoll + attackBonus;
+    const isCrit = attackRoll === 20;
+
+    // Decode soulKey and adjust target's AC with DEX modifier
+    const targetAttrs = decodeSoulKey(target.soulKey);
+    const targetDexMod = getAttributeModifier(targetAttrs.dex);
+    const effectiveAC = target.ac + targetDexMod;
+
     console.log(
-      `${
-        attacker.name
-      } rolls ${attackRoll} + ${attackBonus} = ${totalAttack} vs ${
+      `${attacker.name} rolls ${attackRoll} + ${attackBonus} = ${totalAttack} vs ${
         target.name
-      }'s AC ${target.ac}${isCrit ? " (CRIT)" : ""}`
+      }'s AC ${effectiveAC} (Base ${target.ac} + DEX ${targetDexMod})${isCrit ? " (CRIT)" : ""}`
     );
-    return { hit: totalAttack >= target.ac || isCrit, isCrit }; // Auto-hit on crit
+    return { hit: totalAttack >= effectiveAC || isCrit, isCrit };
   };
 
   // If Christos is hidden, enemies skip their turns

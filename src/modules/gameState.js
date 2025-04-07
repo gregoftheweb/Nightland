@@ -27,7 +27,8 @@ export const getInitialState = (levelId = 1) => {
       inventory: [], // New: Inventory array for Christos
       maxInventorySize: 10, // Limit for general items (we’ll add weapons limit later)
       isHidden: false, // Ensure this is initialized
-     hideTurns: 0,   // Ensure this is initialized
+      hideTurns: 0, // Ensure this is initialized
+      soulKey: "646375627E64",
     },
     monsters: levelConfig.monsters,
     greatPowers: levelConfig.greatPowers,
@@ -115,30 +116,30 @@ export const reducer = (state = initialState, action) => {
         ),
       };
 
-      case "DROP_ITEM":
-        const { itemId } = action.payload;
-        const droppedItem = state.player.inventory.find(
-          (item) => item.id === itemId
-        );
-        if (!droppedItem) return state;
-        const newItem = {
-          ...droppedItem,
-          shortName: droppedItem.shortName || "maguffinRock", // Ensure shortName is set
-          position: { ...state.player.position },
-          active: true,
-          collectible: true,
-        };
-        console.log("Dropping item:", newItem);
-        return {
-          ...state,
-          player: {
-            ...state.player,
-            inventory: state.player.inventory.filter(
-              (item) => item.id !== itemId
-            ),
-          },
-          items: [...state.items, newItem],
-        };
+    case "DROP_ITEM":
+      const { itemId } = action.payload;
+      const droppedItem = state.player.inventory.find(
+        (item) => item.id === itemId
+      );
+      if (!droppedItem) return state;
+      const newItem = {
+        ...droppedItem,
+        shortName: droppedItem.shortName || "maguffinRock", // Ensure shortName is set
+        position: { ...state.player.position },
+        active: true,
+        collectible: true,
+      };
+      console.log("Dropping item:", newItem);
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          inventory: state.player.inventory.filter(
+            (item) => item.id !== itemId
+          ),
+        },
+        items: [...state.items, newItem],
+      };
 
     case "MOVE_PLAYER":
       return {
