@@ -32,7 +32,7 @@ const App = () => {
   const [soloDeathAction, setSoloDeathAction] = useState(null);
   const [deathMessage, setDeathMessage] = useState(""); // Descriptions/death
   const [deathCount, setDeathCount] = useState(0);
-  const [sfxEnabled, setSfxEnabled] = useState(true);
+  const [sfxEnabled, setSfxEnabled] = useState(false);
   const [isDropping, setIsDropping] = useState(false);
   const [showCollisionMask, setShowCollisionMask] = useState(false); // Add this state
   const gameContainerRef = useRef(null);
@@ -130,11 +130,8 @@ const App = () => {
         5000,
         () => setIsDropping(false) // Hypothetical callback when dialog closes
       );
-      
     }
   }, [state.player.inventory, state.player.maxInventorySize, showDialog]);
-
- 
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -147,7 +144,7 @@ const App = () => {
           event.key === keys.moveDown ||
           event.key === keys.moveLeft ||
           event.key === keys.moveRight ||
-          ((event.key === keys.spaceBar) && !state.inCombat)
+          (event.key === keys.spaceBar && !state.inCombat)
         ) {
           handleMovePlayerWithDeath(state, dispatch, event.key);
           updateViewport(state);
@@ -195,8 +192,6 @@ const App = () => {
         return { left: centerX, top: centerY };
     }
   };
-
-
 
   return (
     <div className="app">
@@ -340,27 +335,27 @@ const App = () => {
                   const isInCombat = state.attackSlots.some(
                     (slot) => slot.id === monster.id
                   );
-                  const renderPos = isInCombat
-                    ? null
+                  const pos = isInCombat
+                    ? getCombatSlotPosition(monster.uiSlot || 0)
                     : {
-                        x: monster.position.col * state.tileSize,
-                        y: monster.position.row * state.tileSize,
+                        left: monster.position.col * state.tileSize,
+                        top: monster.position.row * state.tileSize,
                       };
-                  return renderPos ? (
+                  return (
                     <div
                       key={monster.id}
                       id={monster.id}
                       className={monster.shortName}
                       style={{
-                        left: `${renderPos.x}px`,
-                        top: `${renderPos.y}px`,
+                        left: `${pos.left}px`,
+                        top: `${pos.top}px`,
                         position: "absolute",
                         width: "40px",
                         height: "40px",
                       }}
                       onClick={() => showEntityDescription(monster.description)}
                     />
-                  ) : null;
+                  );
                 })}
               {state.inCombat &&
                 state.attackSlots.map((monster) => {

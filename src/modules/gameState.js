@@ -23,6 +23,7 @@ export const getInitialState = (levelId = 1) => {
       initiative: 10,
       lastComment: "",
       attack: 10,
+      ac: 14, // Base AC: 10 (unarmored) + 4 (light armor or natural toughness)
       inventory: [], // New: Inventory array for Christos
       maxInventorySize: 10, // Limit for general items (we’ll add weapons limit later)
       isHidden: false, // Ensure this is initialized

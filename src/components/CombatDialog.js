@@ -1,4 +1,3 @@
-// nightland/src/components/CombatDialog.js
 import React from "react";
 import {
   combatVictoryPlayerComment,
@@ -20,16 +19,29 @@ const CombatDialog = ({ state, lastAction }) => {
 
     switch (lastAction.type) {
       case "PLAYER_HIT":
-        return `${combatPlayerHitComment.replace("6", lastAction.damage)}`;
+        return (
+          <>
+            {combatPlayerHitComment.replace("6", lastAction.damage)}
+            {lastAction.message && (
+              <span className="critical-hit"><br/>{lastAction.message}</span>
+            )}
+          </>
+        );
       case "PLAYER_MISS":
         return combatPlayerMissComment;
       case "ENEMY_HIT": {
-        // Find the attacking monster
         const attackingMonster =
           state.attackSlots.find((slot) => slot.id === state.combatTurn?.id) ||
-          state.attackSlots[0]; // Fallback to first attacker if combatTurn is unclear
+          state.attackSlots[0];
         const monsterName = attackingMonster?.name || "Unknown Creature";
-        return `${monsterName} hit you for ${lastAction.damage} points!`;
+        return (
+          <>
+            {`${monsterName} hit you for ${lastAction.damage} points!`}
+            {lastAction.message && (
+              <span className="critical-hit"><br />{lastAction.message}</span>
+            )}
+          </>
+        );
       }
       case "ENEMY_MISS":
         return combatEnemyMissComment;
@@ -50,7 +62,7 @@ const CombatDialog = ({ state, lastAction }) => {
     <div className="combat-dialog">
       <p>Christos</p>
       <p>HP: {state.player.hp}</p>
-      <p>{actionText}</p>
+      <div>{actionText}</div> {/* Use div to handle JSX with multiple children */}
     </div>
   );
 };

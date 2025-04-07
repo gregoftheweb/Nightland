@@ -1,4 +1,3 @@
-// nightland/src/components/CombatUI.js (updated)
 import React, { useState, useEffect } from "react";
 import CombatDialog from "./CombatDialog";
 import DeathDialog from "./DeathDialog";
@@ -20,6 +19,41 @@ const CombatUI = ({ state, dispatch, onCombatStep, onPlayerDeath }) => {
       combatStep(state, dispatch, (action) => {
         setLastAction(action);
 
+        // Update dialogData with critical hit message
+        if (action.message) {
+          if (action.type === "PLAYER_HIT") {
+            dispatch({
+              type: "UPDATE_DIALOG",
+              payload: {
+                dialogData: {
+                  ...state.dialogData,
+                  player: {
+                    ...state.dialogData.player,
+                    comment: action.message, // "Critical Hit!"
+                  },
+                },
+              },
+            });
+          } else if (action.type === "ENEMY_HIT") {
+            const enemyIndex = state.attackSlots.findIndex(
+              (slot) => slot === state.combatTurn
+            );
+            if (enemyIndex !== -1) {
+              dispatch({
+                type: "UPDATE_DIALOG",
+                payload: {
+                  dialogData: {
+                    ...state.dialogData,
+                    enemies: state.dialogData.enemies.map((e, i) =>
+                      i === enemyIndex ? { ...e, comment: action.message } : e
+                    ),
+                  },
+                },
+              });
+            }
+          }
+        }
+
         if (action.type === "ENEMY_DEATH") {
           setDeathQueue((prev) => [...prev, action]);
           setTimeout(() => {
@@ -30,7 +64,7 @@ const CombatUI = ({ state, dispatch, onCombatStep, onPlayerDeath }) => {
           }, 2000);
         } else if (action.type === "PLAYER_DEATH") {
           setDeathQueue((prev) => [...prev, action]);
-          onPlayerDeath(action.message); // Trigger death message in App.js
+          onPlayerDeath(action.message);
         }
       });
     });

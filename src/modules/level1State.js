@@ -20,6 +20,7 @@ export const level1State = {
         spawnRate: 15,
         spawnChance: 0.2,
         attack: 5,
+        ac: 12, // Lightly armored or tough skin
       },
       {
         name: "Night Hound",
@@ -36,6 +37,7 @@ export const level1State = {
         spawnRate: 25,
         spawnChance: 0.2,
         attack: 8,
+        ac: 13, // Agile and slightly tougher
       },
     ],
     greatPowers: [
@@ -55,6 +57,7 @@ export const level1State = {
         spawnRate: 0,
         spawnChance: 0,
         attack: 5,
+        ac: 18, // Heavily armored due to its immense presence
       },
     ],
     objects: [

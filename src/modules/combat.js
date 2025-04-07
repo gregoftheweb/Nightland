@@ -3,100 +3,126 @@ import { moveMonsters, checkMonsterSpawn } from "./gameLoop";
 import * as textContent from "../assets/copy/textcontent";
 import { initialState } from "./gameState";
 
-
-
 export const combatStep = (state, dispatch, setLastAction = () => {}) => {
   let newTurnOrder = [state.player, ...state.attackSlots];
   let newCombatTurn = state.combatTurn;
   let newAttackSlots = [...state.attackSlots];
   let newWaitingMonsters = [...state.waitingMonsters];
 
-  // If Christos is hidden, enemies skip their turns, and combat may end
+  // Helper function for d20 attack roll with critical hit detection
+  const rollD20Attack = (attacker, target) => {
+    const attackRoll = Math.floor(Math.random() * 20) + 1; // d20 roll (1-20)
+    const attackBonus = attacker.attack; // Base attack stat as bonus
+    const totalAttack = attackRoll + attackBonus; // Future: Add modifiers here
+    const isCrit = attackRoll === 20; // Critical hit on natural 20
+    console.log(
+      `${
+        attacker.name
+      } rolls ${attackRoll} + ${attackBonus} = ${totalAttack} vs ${
+        target.name
+      }'s AC ${target.ac}${isCrit ? " (CRIT)" : ""}`
+    );
+    return { hit: totalAttack >= target.ac || isCrit, isCrit }; // Auto-hit on crit
+  };
+
+  // If Christos is hidden, enemies skip their turns
   if (state.player.isHidden) {
-    // If it's the player's turn, allow it to proceed (e.g., to end combat manually)
     if (state.combatTurn && state.combatTurn.name === state.player.name) {
       const target = newAttackSlots[0];
       if (target) {
-        const damage = Math.floor(Math.random() * 20) + 5;
-        const newHP = Math.max(0, target.hp - damage);
-
-        if (damage > 1) {
-          setLastAction({ type: "PLAYER_HIT", damage });
+        const { hit, isCrit } = rollD20Attack(state.player, target);
+        if (hit) {
+          const baseDamage = Math.floor(Math.random() * 10) + 5; // Base 5-14
+          const damage = isCrit ? baseDamage * 2 : baseDamage; // Double on crit
+          const newHP = Math.max(0, target.hp - damage);
+          setLastAction({
+            type: "PLAYER_HIT",
+            damage,
+            message: isCrit ? "Critical Hit!" : undefined, // Add crit message
+          });
           if (newHP <= 0) {
             setLastAction({ type: "ENEMY_DEATH" });
           }
+          newAttackSlots = newAttackSlots.map((slot) =>
+            slot.id === target.id ? { ...slot, hp: newHP } : slot
+          );
+          dispatch({
+            type: "UPDATE_MONSTER_HP",
+            payload: { id: target.id, hp: newHP },
+          });
         } else {
           setLastAction({ type: "PLAYER_MISS" });
         }
-
-        newAttackSlots = newAttackSlots.map((slot) =>
-          slot.id === target.id ? { ...slot, hp: newHP } : slot
-        );
-        dispatch({
-          type: "UPDATE_MONSTER_HP",
-          payload: { id: target.id, hp: newHP },
-        });
       }
       newCombatTurn = newAttackSlots.length > 0 ? newAttackSlots[0] : null;
     } else {
-      // If it's an enemy's turn, skip it and move to the next turn (player's turn)
-      setLastAction({ type: "ENEMY_SKIP", message: "The enemy cannot find you!" });
+      setLastAction({
+        type: "ENEMY_SKIP",
+        message: "The enemy cannot find you!",
+      });
       newCombatTurn = state.player; // Reset to player’s turn
     }
   } else {
-    // Normal combat flow when not hidden
+    // Normal combat flow
     if (
       state.combatTurn === null ||
       (state.combatTurn && state.combatTurn.name === state.player.name)
     ) {
       const target = newAttackSlots[0];
       if (target) {
-        const damage = Math.floor(Math.random() * 20) + 5;
-        const newHP = Math.max(0, target.hp - damage);
-
-        if (damage > 1) {
-          setLastAction({ type: "PLAYER_HIT", damage });
+        const { hit, isCrit } = rollD20Attack(state.player, target);
+        if (hit) {
+          const baseDamage = Math.floor(Math.random() * 10) + 5; // Base 5-14
+          const damage = isCrit ? baseDamage * 2 : baseDamage; // Double on crit
+          const newHP = Math.max(0, target.hp - damage);
+          setLastAction({
+            type: "PLAYER_HIT",
+            damage,
+            message: isCrit ? "Critical Hit!" : undefined, // Add crit message
+          });
           if (newHP <= 0) {
             setLastAction({ type: "ENEMY_DEATH" });
           }
+          newAttackSlots = newAttackSlots.map((slot) =>
+            slot.id === target.id ? { ...slot, hp: newHP } : slot
+          );
+          dispatch({
+            type: "UPDATE_MONSTER_HP",
+            payload: { id: target.id, hp: newHP },
+          });
         } else {
           setLastAction({ type: "PLAYER_MISS" });
         }
-
-        newAttackSlots = newAttackSlots.map((slot) =>
-          slot.id === target.id ? { ...slot, hp: newHP } : slot
-        );
-        dispatch({
-          type: "UPDATE_MONSTER_HP",
-          payload: { id: target.id, hp: newHP },
-        });
       }
       newCombatTurn = newAttackSlots.length > 0 ? newAttackSlots[0] : null;
     } else {
       const enemy = newAttackSlots.find((e) => e === state.combatTurn);
       if (enemy && enemy.hp > 0) {
-        const damage = Math.floor(Math.random() * enemy.attack) + 1;
-        const newPlayerHP = Math.max(0, state.player.hp - damage);
-
-        if (damage > 1) {
-          setLastAction({ type: "ENEMY_HIT", damage });
+        const { hit, isCrit } = rollD20Attack(enemy, state.player);
+        if (hit) {
+          const baseDamage = Math.floor(Math.random() * enemy.attack) + 1;
+          const damage = isCrit ? baseDamage * 2 : baseDamage; // Double on crit
+          const newPlayerHP = Math.max(0, state.player.hp - damage);
+          setLastAction({
+            type: "ENEMY_HIT",
+            damage,
+            message: isCrit ? "Critical Hit!" : undefined, // Add crit message
+          });
           if (newPlayerHP <= 0) {
             const deathMessageKey = `combatChristosDeath${enemy.shortName}`;
-            const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
+            const deathMessage =
+              textContent[deathMessageKey] ||
+              textContent.combatChristosDeathDefault;
             setLastAction({ type: "PLAYER_DEATH", message: deathMessage });
+          }
+          dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: newPlayerHP } });
+          if (newPlayerHP <= 0) {
+            resetChristos(state, dispatch);
+            return;
           }
         } else {
           setLastAction({ type: "ENEMY_MISS" });
         }
-
-        dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: newPlayerHP } });
-
-        if (newPlayerHP <= 0) {
-          resetChristos(state, dispatch);
-          return;
-        }
-      } else if (enemy && enemy.hp <= 0) {
-        // No action needed here
       }
 
       const currentIndex = newAttackSlots.indexOf(state.combatTurn);
@@ -119,7 +145,11 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
   );
   dispatch({
     type: "UPDATE_ACTIVE_MONSTERS",
-    payload: { activeMonsters: updatedActiveMonsters },
+    payload: {
+      activeMonsters: updatedActiveMonsters.map(
+        (m) => newAttackSlots.find((slot) => slot.id === m.id) || m
+      ),
+    },
   });
 
   if (newAttackSlots.length !== state.attackSlots.length) {
@@ -172,7 +202,6 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
   }
 };
 
-
 const moveWaitingMonsters = (state, dispatch, attackSlots, waitingMonsters) => {
   if (!waitingMonsters || !Array.isArray(waitingMonsters)) {
     return {
@@ -202,7 +231,11 @@ const moveWaitingMonsters = (state, dispatch, attackSlots, waitingMonsters) => {
 
   waitingMonsters.slice(0, availableSlots).forEach((monster, index) => {
     const newPosition = slotPositions[(attackSlots.length + index) % 4];
-    newAttackSlots.push({ ...monster, position: newPosition });
+    newAttackSlots.push({
+      ...monster,
+      position: newPosition,
+      uiSlot: attackSlots.length + index,
+    });
     newWaitingMonsters = newWaitingMonsters.filter((m) => m.id !== monster.id);
 
     const updatedActiveMonsters = state.activeMonsters.map((m) =>
@@ -210,7 +243,11 @@ const moveWaitingMonsters = (state, dispatch, attackSlots, waitingMonsters) => {
     );
     dispatch({
       type: "UPDATE_ACTIVE_MONSTERS",
-      payload: { activeMonsters: updatedActiveMonsters },
+      payload: {
+        activeMonsters: updatedActiveMonsters.map(
+          (m) => newAttackSlots.find((slot) => slot.id === m.id) || m
+        ),
+      },
     });
   });
 

@@ -82,7 +82,9 @@ export function moveToward(entity, targetRow, targetCol, speed = 1, gridWidth = 
   
     // Active Monsters
     (state.activeMonsters || []).forEach((monster) => {
-      const element = document.querySelector(`#${monster.id}`);
+      const element =
+        document.querySelector(`#${monster.id}`) || // Normal state
+        document.querySelector(`#combat-${monster.id}`); // Combat state
       if (element && monster.position) {
         element.style.left = `${monster.position.col * tileSize}px`;
         element.style.top = `${monster.position.row * tileSize}px`;

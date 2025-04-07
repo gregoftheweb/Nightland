@@ -403,6 +403,11 @@ html {
   z-index: 1001;
 }
 
+.critical-hit {
+  color: #ff0000; /* Bright red */
+  display: block; /* Ensures it’s on its own line */
+}
+
 .death-dialog {
   position: fixed;
   right: 20px;
