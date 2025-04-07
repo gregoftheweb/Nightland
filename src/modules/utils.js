@@ -232,3 +232,33 @@ export const isClickWithinBounds = (event, gameBoard, object, tileSize) => {
     relativeCol < objWidth
   );
 };
+
+// Add to utils.js
+export function encodeSoulKey(attributes) {
+  const { str, int, dex, wil, wis, cha } = attributes;
+  const plainBytes = [str, int, dex, wil, wis, cha];
+  const key = [110, 105, 103, 104, 116]; // "night" ASCII values (n, i, g, h, t)
+  const obfuscatedBytes = plainBytes.map((byte, i) => byte ^ key[i % key.length]);
+  return obfuscatedBytes
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+}
+
+export function decodeSoulKey(soulKey) {
+  const bytes = soulKey.match(/.{2}/g).map((hex) => parseInt(hex, 16));
+  const key = [110, 105, 103, 104, 116];
+  const plainBytes = bytes.map((byte, i) => byte ^ key[i % key.length]);
+  return {
+    str: plainBytes[0],
+    int: plainBytes[1],
+    dex: plainBytes[2],
+    wil: plainBytes[3],
+    wis: plainBytes[4],
+    cha: plainBytes[5],
+  };
+}
+
+export function getAttributeModifier(value) {
+  return Math.floor((value - 10) / 2);
+}
