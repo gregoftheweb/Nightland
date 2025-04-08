@@ -10,7 +10,7 @@ export const handleMovePlayer = (
   dispatch,
   direction,
   showDialog,
-  setDeathMessage
+  setDeathMessage 
 ) => {
   if (state.inCombat) return;
 
@@ -32,6 +32,8 @@ export const handleMovePlayer = (
     case "right":
       newPosition.col = Math.min(state.gridWidth - 1, newPosition.col + 1);
       break;
+    case "stay": // For spacebar or other non-movement actions
+      break; // No movement
     case null: // For spacebar or other non-movement actions
       return; // No movement
     default:
@@ -383,49 +385,75 @@ export const moveMonsters = (
 
 export const checkMonsterSpawn = (state, dispatch, showDialog) => {
   const currentLevel = state.levels.find((lvl) => lvl.id === state.level);
-  if (!currentLevel) return; // Safety check
+  if (!currentLevel) return;
 
-  // For Level 1, use existing monsters; this can be adjusted per level later
-  state.monsters.forEach((monsterTemplate) => {
-    const activeCount = state.activeMonsters.filter(
+  const { moveCount, player, activeMonsters } = state;
+
+  for (const monsterTemplate of state.monsters) {
+    const activeCount = activeMonsters.filter(
       (m) => m.name === monsterTemplate.name
     ).length;
 
-    if (activeCount >= monsterTemplate.maxInstances) return;
+    // Skip if max number of this monster type is already active
+    if (activeCount >= (monsterTemplate.maxInstances || 1)) continue;
 
-    if (
-      (state.moveCount + 1) % monsterTemplate.spawnRate === 0 &&
-      Math.random() < monsterTemplate.spawnChance
-    ) {
-      const spawnPosition = getSpawnPosition(state.player.position);
-      const newMonster = {
-        ...monsterTemplate,
-        position: spawnPosition,
-        id: `${monsterTemplate.shortName}-${Date.now()}`,
-        active: true,
-        hp: monsterTemplate.hp || 20,
-      };
-      dispatch({ type: "SPAWN_MONSTER", payload: { monster: newMonster } });
-    }
-  });
+    // Only consider spawning on valid spawn intervals
+    const shouldAttemptSpawn =
+      monsterTemplate.spawnRate &&
+      (moveCount + 1) % monsterTemplate.spawnRate === 0;
+
+    if (!shouldAttemptSpawn) continue;
+
+    // Spawn chance roll
+    const spawnRoll = Math.random();
+    if (spawnRoll >= (monsterTemplate.spawnChance || 0)) continue;
+
+    const spawnPosition = getSpawnPosition(player.position);
+
+    const newMonster = {
+      ...monsterTemplate,
+      position: spawnPosition,
+      id: `${monsterTemplate.shortName}-${Date.now()}`,
+      active: true,
+      hp: monsterTemplate.hp ?? 20,
+    };
+
+    dispatch({ type: "SPAWN_MONSTER", payload: { monster: newMonster } });
+
+    // Optional: feedback or debugging
+    // if (showDialog) {
+    //   showDialog(`A ${monsterTemplate.name} stirs in the dark...`, 2500);
+    // }
+  }
 };
+
 
 const getSpawnPosition = (playerPosition) => {
-  let spawnRow, spawnCol, distance;
   const gridHeight = 400;
   const gridWidth = 400;
+  let spawnRow, spawnCol, distance;
+
   do {
-    spawnRow = playerPosition.row + Math.floor(Math.random() * 11) - 5; // ±5 tiles
-    spawnCol = playerPosition.col + Math.floor(Math.random() * 11) - 5;
+    const angle = Math.random() * 2 * Math.PI; // Random direction
+    const radius = Math.floor(Math.random() * 11) + 5; // Distance: 10–20
+
+    // Convert polar to grid offset
+    spawnRow = playerPosition.row + Math.round(Math.sin(angle) * radius);
+    spawnCol = playerPosition.col + Math.round(Math.cos(angle) * radius);
+
+    // Clamp within bounds
     spawnRow = Math.max(0, Math.min(gridHeight - 1, spawnRow));
     spawnCol = Math.max(0, Math.min(gridWidth - 1, spawnCol));
+
     distance = Math.sqrt(
       Math.pow(spawnRow - playerPosition.row, 2) +
-        Math.pow(spawnCol - playerPosition.col, 2)
+      Math.pow(spawnCol - playerPosition.col, 2)
     );
-  } while (distance < 5 || distance > 10); // 5-10 tiles away
+  } while (distance < 10 || distance > 20); // Strict 10–20 tile ring
+
   return { row: spawnRow, col: spawnCol };
 };
+
 
 const checkCollision = (monsterPos, playerPos) => {
   return monsterPos.row === playerPos.row && monsterPos.col === playerPos.col;

@@ -176,78 +176,23 @@ const App = () => {
     }
   }, [state.player.weapons, state.player.maxWeaponsSize, showDialog, isEquippingWeapon]);
 
+
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (phase !== "gameplay") return;
-
       event.preventDefault();
       const { keys } = gamePreferences;
-
-      let direction = null;
-      if (event.key === keys.moveUp) direction = "up";
-      else if (event.key === keys.moveDown) direction = "down";
-      else if (event.key === keys.moveLeft) direction = "left";
-      else if (event.key === keys.moveRight) direction = "right";
-
-      if (direction) {
-        handleMovePlayerWithDeath(direction);
-        updateViewport(state);
-      } else if (event.key === keys.spaceBar) {
-        if (state.inCombat) {
-          if (combatStepRef.current) combatStepRef.current();
-        } else {
-          handleMovePlayerWithDeath(null);
-        }
-      } else if (event.key === keys.showInventory) {
-        showInventory();
-      } else if (event.key === keys.showWeaponsInventory) {
-        showWeaponsInventory();
-      } else if (isDropping && /^[1-9]$/.test(event.key)) {
-        const index = parseInt(event.key, 10) - 1;
-        const itemToDrop = state.player.inventory[index];
-        if (itemToDrop) {
-          dispatch({ type: "DROP_ITEM", payload: { itemId: itemToDrop.id } });
-          showDialog(`Dropped ${itemToDrop.name}.`, 3000);
-          setIsDropping(false);
-          dispatch({ type: "TOGGLE_INVENTORY" });
-        }
-      } else if (isDroppingWeapon && /^[1-9]$/.test(event.key)) {
-        const index = parseInt(event.key, 10) - 1;
-        const weaponToDrop = state.player.weapons[index];
-        if (weaponToDrop) {
-          if (isEquippingWeapon) {
-            // Equip the selected weapon
-            dispatch({ type: "EQUIP_WEAPON", payload: { weaponId: weaponToDrop.id } });
-            const weaponDetails = state.weapons.find((w) => w.id === weaponToDrop.id);
-            showDialog(`Equipped ${weaponDetails.name}.`, 3000);
-            setIsEquippingWeapon(false);
-            setIsDroppingWeapon(false);
-            dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
-          } else {
-            // Drop the selected weapon
-            if (weaponToDrop.id === "weapon-discos-001") {
-              showDialog("Cannot drop this weapon!", 3000);
-              setIsDroppingWeapon(false);
-              dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
-            } else {
-              dispatch({ type: "DROP_WEAPON", payload: { weaponId: weaponToDrop.id } });
-              const weaponDetails = state.weapons.find((w) => w.id === weaponToDrop.id);
-              showDialog(`Dropped ${weaponDetails.name}.`, 3000);
-              setIsDroppingWeapon(false);
-              dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
-            }
-          }
-        }
-      } else if (isDroppingWeapon && event.key === keys.equipWeapon) {
-        // Enter equip mode if there are multiple weapons
-        if (state.player.weapons.length > 1) {
-          setIsEquippingWeapon(true);
-          // Refresh the dialog to show the "Equip Weapon Number" prompt
-          showWeaponsInventory();
-        }
-      }
+  
+      if (handleMovementKey(event, keys)) return;
+      if (handleSpacebar(event, keys)) return;
+      if (handleInventoryToggle(event, keys)) return;
+      if (handleWeaponsInventoryToggle(event, keys)) return;
+      if (handleItemDropKey(event)) return;
+      if (handleWeaponKey(event)) return;
+      if (handleEquipModeToggle(event, keys)) return;
     };
-
+  
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [
@@ -260,6 +205,117 @@ const App = () => {
     isDroppingWeapon,
     isEquippingWeapon,
   ]);
+  
+
+
+  const handleMovementKey = (event, keys) => {
+    const directionMap = {
+      [keys.moveUp]: "up",
+      [keys.moveDown]: "down",
+      [keys.moveLeft]: "left",
+      [keys.moveRight]: "right",
+    };
+  
+    const direction = directionMap[event.key];
+    if (direction) {
+      handleMovePlayerWithDeath(direction);
+      updateViewport(state);
+      return true;
+    }
+    return false;
+  };
+  
+  const handleSpacebar = (event, keys) => {
+    if (event.key !== keys.spaceBar) return false;
+  
+    if (state.inCombat && combatStepRef.current) {
+      combatStepRef.current();
+    } else {
+      handleMovePlayerWithDeath("stay");
+    }
+    return true;
+  };
+  
+  const handleInventoryToggle = (event, keys) => {
+    if (event.key === keys.showInventory) {
+      showInventory();
+      return true;
+    }
+    return false;
+  };
+  
+  const handleWeaponsInventoryToggle = (event, keys) => {
+    if (event.key === keys.showWeaponsInventory) {
+      showWeaponsInventory();
+      return true;
+    }
+    return false;
+  };
+  
+  const handleItemDropKey = (event) => {
+    if (!isDropping || !/^[1-9]$/.test(event.key)) return false;
+  
+    const index = parseInt(event.key, 10) - 1;
+    const itemToDrop = state.player.inventory[index];
+    if (itemToDrop) {
+      dispatch({ type: "DROP_ITEM", payload: { itemId: itemToDrop.id } });
+      showDialog(`Dropped ${itemToDrop.name}.`, 3000);
+      setIsDropping(false);
+      dispatch({ type: "TOGGLE_INVENTORY" });
+    }
+    return true;
+  };
+  
+  const handleWeaponKey = (event) => {
+    if (!isDroppingWeapon || !/^[1-9]$/.test(event.key)) return false;
+  
+    const index = parseInt(event.key, 10) - 1;
+    const weaponToDrop = state.player.weapons[index];
+    if (!weaponToDrop) return false;
+  
+    const weaponDetails = state.weapons.find((w) => w.id === weaponToDrop.id);
+  
+    if (isEquippingWeapon) {
+      dispatch({ type: "EQUIP_WEAPON", payload: { weaponId: weaponToDrop.id } });
+      showDialog(`Equipped ${weaponDetails.name}.`, 3000);
+      setIsEquippingWeapon(false);
+      setIsDroppingWeapon(false);
+      dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
+    } else {
+      if (weaponToDrop.id === "weapon-discos-001") {
+        showDialog("Cannot drop this weapon!", 3000);
+      } else {
+        dispatch({ type: "DROP_WEAPON", payload: { weaponId: weaponToDrop.id } });
+        showDialog(`Dropped ${weaponDetails.name}.`, 3000);
+      }
+      setIsDroppingWeapon(false);
+      dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
+    }
+  
+    return true;
+  };
+  
+  const handleEquipModeToggle = (event, keys) => {
+    if (!isDroppingWeapon || event.key !== keys.equipWeapon) return false;
+  
+    if (state.player.weapons.length > 1) {
+      setIsEquippingWeapon(true);
+      showWeaponsInventory(); // Refresh prompt
+    }
+  
+    return true;
+  };
+  
+
+
+
+
+
+
+
+
+
+
 
   useEffect(() => {
     if (phase === "gameplay") {

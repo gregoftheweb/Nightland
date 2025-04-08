@@ -217,10 +217,11 @@ html {
 }
 
 .shortsword {
-  border: 2px solid blue;
-  background-color: transparent;
-  box-sizing: border-box;
-  box-shadow: 0 0 5px blue; /* Add a blue glow */
+  background-image: url("../../public/assets/images/shortSword.png"); /* Use the image */
+  background-size: cover; /* Ensure the image covers the area */
+  background-position: center; /* Center the image */
+  width: 40px; /* Set the size of the weapon */
+  height: 40px; /* Adjust based on your game's tile size */
 }
 
 .shortsword:hover {
@@ -228,6 +229,7 @@ html {
   box-shadow: 0 0 10px blue; /* Stronger glow on hover */
   cursor: pointer;
 }
+
 
 .abhuman {
     position: absolute;
