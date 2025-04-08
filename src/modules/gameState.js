@@ -22,14 +22,43 @@ export const getInitialState = (levelId = 1) => {
       description: "One of the humans from the Last Redoubt.",
       initiative: 10,
       lastComment: "",
-      attack: 10,
+      attack: 4, //fists
       ac: 14, // Base AC: 10 (unarmored) + 4 (light armor or natural toughness)
       inventory: [], // New: Inventory array for Christos
       maxInventorySize: 10, // Limit for general items (we’ll add weapons limit later)
+      weapons: [
+        {
+          id: "weapon-discos-001",
+          equipped: true, // Starts with Discos equipped
+        },
+      ],
+      maxWeaponsSize: 2, // Limit to 2 weapons carried
       isHidden: false, // Ensure this is initialized
       hideTurns: 0, // Ensure this is initialized
-      soulKey: "646375627E64",
+      soulKey: "7C6368627E64",
     },
+    weapons: [
+      {
+        id: "weapon-discos-001",
+        shortName: "discos",
+        name: "Discos",
+        description: "Physically paired with Christos, powered by the Earth Current. This is a pole arm with a spinning blue disc of death for the evil monsters of the Night Land.",
+        damage: { min: 2, max: 12 }, // 2-12
+        attack: 1, // +1 to attack
+        toHit: 2, // +4 to-hit bonus (heroic weapon)
+        effects: [], // None for now
+      },
+      {
+        id: "weapon-shortsword-002",
+        shortName: "shortsword",
+        name: "Short Sword",
+        description: "A simple blade forged in the Last Redoubt, sharp and reliable against the lesser horrors.",
+        damage: { min: 1, max: 6 }, // 1-6 (standard short sword vibe)
+        attack: 0, // +0 to attack
+        toHit: 0, // +0 to-hit bonus
+        effects: [], // None for now
+      },
+    ],
     monsters: levelConfig.monsters,
     greatPowers: levelConfig.greatPowers,
     objects: levelConfig.objects,

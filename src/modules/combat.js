@@ -10,36 +10,63 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
   let newAttackSlots = [...state.attackSlots];
   let newWaitingMonsters = [...state.waitingMonsters];
 
-  // Helper function for d20 attack roll with critical hit detection
   const rollD20Attack = (attacker, target) => {
     const attackRoll = Math.floor(Math.random() * 20) + 1;
-    const attackBonus = attacker.attack;
-    const totalAttack = attackRoll + attackBonus;
+    const attackerAttrs = decodeSoulKey(attacker.soulKey);
+    const strMod = getAttributeModifier(attackerAttrs.str);
+    let attackBonus = attacker.attack; // Default for monsters or unarmed
+    let toHitBonus = 0; // Default to 0
+    let weapon = null;
+
+    // If Christos, find equipped weapon from state.weapons
+    if (attacker.name === "Christos" && attacker.weapons) {
+      const equippedWeaponId = attacker.weapons.find((w) => w.equipped)?.id;
+      weapon = equippedWeaponId
+        ? state.weapons.find((w) => w.id === equippedWeaponId)
+        : null;
+      if (weapon) {
+        attackBonus = weapon.attack;
+        toHitBonus = weapon.toHit || 0; // Use weapon's toHit, default to 0
+      } else {
+        attackBonus = attacker.attack; // Unarmed fallback
+      }
+    }
+
+    const totalAttack = attackRoll + attackBonus + strMod + toHitBonus;
     const isCrit = attackRoll === 20;
 
-    // Decode soulKey and adjust target's AC with DEX modifier
     const targetAttrs = decodeSoulKey(target.soulKey);
     const targetDexMod = getAttributeModifier(targetAttrs.dex);
     const effectiveAC = target.ac + targetDexMod;
 
-   
-    return { hit: totalAttack >= effectiveAC || isCrit, isCrit };
+    console.log(
+      `${attacker.name} rolls ${attackRoll} + ${attackBonus} + STR ${strMod} + ToHit ${toHitBonus} = ${totalAttack} vs ${
+        target.name
+      }'s AC ${effectiveAC} (Base ${target.ac} + DEX ${targetDexMod})${isCrit ? " (CRIT)" : ""}`
+    );
+    return { hit: totalAttack >= effectiveAC || isCrit, isCrit, weapon };
   };
 
-  // If Christos is hidden, enemies skip their turns
   if (state.player.isHidden) {
     if (state.combatTurn && state.combatTurn.name === state.player.name) {
       const target = newAttackSlots[0];
       if (target) {
-        const { hit, isCrit } = rollD20Attack(state.player, target);
+        const { hit, isCrit, weapon } = rollD20Attack(state.player, target);
         if (hit) {
-          const baseDamage = Math.floor(Math.random() * 10) + 5; // Base 5-14
-          const damage = isCrit ? baseDamage * 2 : baseDamage; // Double on crit
+          const attackerAttrs = decodeSoulKey(state.player.soulKey);
+          const strengthMod = getAttributeModifier(attackerAttrs.str);
+          const equippedWeapon = weapon || { damage: { min: 1, max: 4 } }; // Unarmed fallback
+          const baseDamage = Math.floor(
+            Math.random() * (equippedWeapon.damage.max - equippedWeapon.damage.min + 1)
+          ) + equippedWeapon.damage.min;
+          const rawDamage = (isCrit ? baseDamage * 2 : baseDamage) + strengthMod;
+          const damage = Math.max(1, rawDamage);
+          console.log(`Player Damage: Base ${baseDamage} + STR ${strengthMod} = ${rawDamage} == ${damage})`);
           const newHP = Math.max(0, target.hp - damage);
           setLastAction({
             type: "PLAYER_HIT",
             damage,
-            message: isCrit ? "Critical Hit!" : undefined, // Add crit message
+            message: isCrit ? "Critical Hit!" : undefined,
           });
           if (newHP <= 0) {
             setLastAction({ type: "ENEMY_DEATH" });
@@ -57,29 +84,32 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
       }
       newCombatTurn = newAttackSlots.length > 0 ? newAttackSlots[0] : null;
     } else {
-      setLastAction({
-        type: "ENEMY_SKIP",
-        message: "The enemy cannot find you!",
-      });
-      newCombatTurn = state.player; // Reset to player’s turn
+      setLastAction({ type: "ENEMY_SKIP", message: "The enemy cannot find you!" });
+      newCombatTurn = state.player;
     }
   } else {
-    // Normal combat flow
     if (
       state.combatTurn === null ||
       (state.combatTurn && state.combatTurn.name === state.player.name)
     ) {
       const target = newAttackSlots[0];
       if (target) {
-        const { hit, isCrit } = rollD20Attack(state.player, target);
+        const { hit, isCrit, weapon } = rollD20Attack(state.player, target);
         if (hit) {
-          const baseDamage = Math.floor(Math.random() * 10) + 5; // Base 5-14
-          const damage = isCrit ? baseDamage * 2 : baseDamage; // Double on crit
+          const attackerAttrs = decodeSoulKey(state.player.soulKey);
+          const strMod = getAttributeModifier(attackerAttrs.str);
+          const equippedWeapon = weapon || { damage: { min: 1, max: 4 } }; // Unarmed fallback
+          const baseDamage = Math.floor(
+            Math.random() * (equippedWeapon.damage.max - equippedWeapon.damage.min + 1)
+          ) + equippedWeapon.damage.min;
+          const rawDamage = (isCrit ? baseDamage * 2 : baseDamage) + strMod;
+          const damage = Math.max(1, rawDamage);
+          console.log(`Player Damage: Base ${baseDamage} + STR ${strMod} = ${rawDamage} == ${damage}`);
           const newHP = Math.max(0, target.hp - damage);
           setLastAction({
             type: "PLAYER_HIT",
             damage,
-            message: isCrit ? "Critical Hit!" : undefined, // Add crit message
+            message: isCrit ? "Critical Hit!" : undefined,
           });
           if (newHP <= 0) {
             setLastAction({ type: "ENEMY_DEATH" });
@@ -101,19 +131,21 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
       if (enemy && enemy.hp > 0) {
         const { hit, isCrit } = rollD20Attack(enemy, state.player);
         if (hit) {
+          const attackerAttrs = decodeSoulKey(enemy.soulKey);
+          const strMod = getAttributeModifier(attackerAttrs.str);
           const baseDamage = Math.floor(Math.random() * enemy.attack) + 1;
-          const damage = isCrit ? baseDamage * 2 : baseDamage; // Double on crit
+          const rawDamage = (isCrit ? baseDamage * 2 : baseDamage) + strMod;
+          const damage = Math.max(1, rawDamage);
+          console.log(`Enemy Damage: Base ${baseDamage} + STR ${strMod} = ${rawDamage} (Clamped to ${damage})`);
           const newPlayerHP = Math.max(0, state.player.hp - damage);
           setLastAction({
             type: "ENEMY_HIT",
             damage,
-            message: isCrit ? "Critical Hit!" : undefined, // Add crit message
+            message: isCrit ? "Critical Hit!" : undefined,
           });
           if (newPlayerHP <= 0) {
             const deathMessageKey = `combatChristosDeath${enemy.shortName}`;
-            const deathMessage =
-              textContent[deathMessageKey] ||
-              textContent.combatChristosDeathDefault;
+            const deathMessage = textContent[deathMessageKey] || textContent.combatChristosDeathDefault;
             setLastAction({ type: "PLAYER_DEATH", message: deathMessage });
           }
           dispatch({ type: "UPDATE_PLAYER_HP", payload: { hp: newPlayerHP } });
@@ -135,7 +167,6 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
       }
     }
   }
-
   // Clean up dead monsters
   const deadMonsterIds = newAttackSlots
     .filter((slot) => slot.hp <= 0)
