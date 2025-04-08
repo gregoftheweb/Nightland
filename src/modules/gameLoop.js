@@ -8,7 +8,7 @@ import { moveAway, disappearFarMonsters } from "./utils"; // Add this import
 export const handleMovePlayer = (
   state,
   dispatch,
-  key,
+  direction,
   showDialog,
   setDeathMessage
 ) => {
@@ -18,24 +18,24 @@ export const handleMovePlayer = (
 
   const newPosition = { ...state.player.position };
 
-  switch (key) {
-    case "ArrowUp":
+  // Update position based on direction
+  switch (direction) {
+    case "up":
       newPosition.row = Math.max(0, newPosition.row - 1);
       break;
-    case "ArrowDown":
+    case "down":
       newPosition.row = Math.min(state.gridHeight - 1, newPosition.row + 1);
       break;
-    case "ArrowLeft":
+    case "left":
       newPosition.col = Math.max(0, newPosition.col - 1);
       break;
-    case "ArrowRight":
+    case "right":
       newPosition.col = Math.min(state.gridWidth - 1, newPosition.col + 1);
       break;
-    case " ":
-      isMove = false;
-      break;
+    case null: // For spacebar or other non-movement actions
+      return; // No movement
     default:
-     
+      console.warn(`Unhandled direction: ${direction}`);
       return;
   }
 
@@ -48,41 +48,61 @@ export const handleMovePlayer = (
     player: { ...state.player, position: newPosition },
   };
 
-  // Check for collectible items (NEW)
-  const itemAtPosition = state.items.find((item) => {
-    const itemRowStart = item.position.row;
-    const itemColStart = item.position.col;
-    const itemWidth = item.size?.width || 1;
-    const itemHeight = item.size?.height || 1;
-    const itemRowEnd = itemRowStart + itemHeight - 1;
-    const itemColEnd = itemColStart + itemWidth - 1;
+ // Check for collectible items or weapons
+ const collectibleAtPosition = state.items.find((item) => {
+  if (!item || !item.active || !item.collectible || !item.position) return false;
 
-    return (
-      item.active &&
-      item.collectible &&
-      newPosition.row >= itemRowStart &&
-      newPosition.row <= itemRowEnd &&
-      newPosition.col >= itemColStart &&
-      newPosition.col <= itemColEnd
+  const itemRowStart = item.position.row;
+  const itemColStart = item.position.col;
+  const itemWidth = item.size?.width || 1;
+  const itemHeight = item.size?.height || 1;
+  const itemRowEnd = itemRowStart + itemHeight - 1;
+  const itemColEnd = itemColStart + itemWidth - 1;
+
+  return (
+    item.active &&
+    item.collectible &&
+    newPosition.row >= itemRowStart &&
+    newPosition.row <= itemRowEnd &&
+    newPosition.col >= itemColStart &&
+    newPosition.col <= itemColEnd
+  );
+});
+
+if (collectibleAtPosition) {
+  if (collectibleAtPosition.type === "weapon") {
+    // Handle weapon pickup
+    const weapon = state.weapons.find(
+      (w) => w.id === collectibleAtPosition.weaponId
     );
-  });
-
-  if (itemAtPosition) {
+    if (!weapon) {
+      console.warn("Weapon not found:", collectibleAtPosition.weaponId);
+      return;
+    }
+    const weaponEntry = {
+      id: weapon.id,
+      equipped: false, // Not equipped by default
+    };
+    dispatch({ type: "ADD_TO_WEAPONS", payload: { weapon: weaponEntry } });
+    showDialog(`Picked up ${weapon.name}!`, 3000);
+  } else {
+    // Handle regular item pickup
     const item = {
-      id: `${itemAtPosition.shortName}-${Date.now()}`,
-      name: itemAtPosition.name,
-      description: itemAtPosition.description,
+      id: `${collectibleAtPosition.shortName}-${Date.now()}`,
+      name: collectibleAtPosition.name,
+      description: collectibleAtPosition.description,
     };
     dispatch({ type: "ADD_TO_INVENTORY", payload: { item } });
     showDialog(`Picked up ${item.name}!`, 3000);
-    dispatch({
-      type: "UPDATE_ITEM",
-      payload: {
-        shortName: itemAtPosition.shortName,
-        updates: { active: false },
-      },
-    });
   }
+  dispatch({
+    type: "UPDATE_ITEM",
+    payload: {
+      shortName: collectibleAtPosition.shortName,
+      updates: { active: false },
+    },
+  });
+}
 
   // Check for objects with effects at the new position, considering size
   const objectAtPosition = state.objects.find((obj) => {

@@ -7,8 +7,8 @@ import React, {
   useRef,
 } from "react";
 import { initialState, reducer } from "./modules/gameState";
-import { gamePreferences } from "./modules/gamePreferences"; // New: Import preferences
-import { dropItemPrompt } from "./assets/copy/textcontent"; // New import
+import { gamePreferences } from "./modules/gamePreferences";
+import { dropItemPrompt } from "./assets/copy/textcontent";
 import SplashScreen from "./components/SplashScreen";
 import PrincessScreen from "./components/PrincessScreen";
 import StatusBar from "./components/StatusBar";
@@ -28,13 +28,15 @@ const App = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [phase, setPhase] = useState("splash");
   const [showSettings, setShowSettings] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState(""); // In-game messages
+  const [dialogMessage, setDialogMessage] = useState("");
   const [soloDeathAction, setSoloDeathAction] = useState(null);
-  const [deathMessage, setDeathMessage] = useState(""); // Descriptions/death
+  const [deathMessage, setDeathMessage] = useState("");
   const [deathCount, setDeathCount] = useState(0);
   const [sfxEnabled, setSfxEnabled] = useState(false);
   const [isDropping, setIsDropping] = useState(false);
-  const [showCollisionMask, setShowCollisionMask] = useState(false); // Add this state
+  const [isDroppingWeapon, setIsDroppingWeapon] = useState(false);
+  const [isEquippingWeapon, setIsEquippingWeapon] = useState(false); // New state for equip mode
+  const [showCollisionMask, setShowCollisionMask] = useState(false);
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
   const audioRef = useRef(null);
@@ -82,7 +84,7 @@ const App = () => {
     if (duration) {
       setTimeout(() => {
         setDialogMessage("");
-        if (onClose) onClose(); // Call the onClose callback
+        if (onClose) onClose();
       }, duration);
     }
   }, []);
@@ -100,8 +102,8 @@ const App = () => {
     showDialog(levelMessage, 10000);
   };
 
-  const handleMovePlayerWithDeath = (state, dispatch, key) =>
-    handleMovePlayer(state, dispatch, key, showDialog, (msg) => {
+  const handleMovePlayerWithDeath = (direction) =>
+    handleMovePlayer(state, dispatch, direction, showDialog, (msg) => {
       setDeathMessage(msg);
       setDeathCount((prev) => prev + 1);
     });
@@ -110,6 +112,7 @@ const App = () => {
     if (state.player.inventory.length === 0) {
       showDialog("Inventory is empty.", 3000);
     } else {
+      dispatch({ type: "TOGGLE_INVENTORY" });
       setIsDropping(true);
       showDialog(
         <div>
@@ -128,45 +131,135 @@ const App = () => {
           <p className="drop-prompt">{dropItemPrompt}</p>
         </div>,
         5000,
-        () => setIsDropping(false) // Hypothetical callback when dialog closes
+        () => setIsDropping(false)
       );
     }
   }, [state.player.inventory, state.player.maxInventorySize, showDialog]);
 
+  const showWeaponsInventory = useCallback(() => {
+    if (state.player.weapons.length === 0) {
+      showDialog("Weapons inventory is empty.", 3000);
+    } else {
+      dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
+      setIsDroppingWeapon(true);
+      setIsEquippingWeapon(false); // Reset equip mode when opening inventory
+      showDialog(
+        <div>
+          <h3>
+            Weapons Inventory ({state.player.weapons.length}/
+            {state.player.maxWeaponsSize})
+          </h3>
+          <ul>
+            {state.player.weapons.map((weapon, index) => {
+              const weaponDetails = state.weapons.find((w) => w.id === weapon.id);
+              return (
+                <li key={weapon.id}>
+                  {index + 1}. {weaponDetails.name}{" "}
+                  {weapon.equipped ? "(Equipped)" : ""}
+                </li>
+              );
+            })}
+          </ul>
+          <hr className="drop-divider" />
+          <p className="drop-prompt">
+            {isEquippingWeapon && state.player.weapons.length > 1
+              ? "Equip Weapon Number"
+              : dropItemPrompt}
+          </p>
+        </div>,
+        5000,
+        () => {
+          setIsDroppingWeapon(false);
+          setIsEquippingWeapon(false); // Reset equip mode when closing
+        }
+      );
+    }
+  }, [state.player.weapons, state.player.maxWeaponsSize, showDialog, isEquippingWeapon]);
+
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (phase === "gameplay") {
-        event.preventDefault();
-        const { keys } = gamePreferences;
+      if (phase !== "gameplay") return;
 
-        if (
-          event.key === keys.moveUp ||
-          event.key === keys.moveDown ||
-          event.key === keys.moveLeft ||
-          event.key === keys.moveRight ||
-          (event.key === keys.spaceBar && !state.inCombat)
-        ) {
-          handleMovePlayerWithDeath(state, dispatch, event.key);
-          updateViewport(state);
-        } else if (event.key === keys.spaceBar && state.inCombat) {
+      event.preventDefault();
+      const { keys } = gamePreferences;
+
+      let direction = null;
+      if (event.key === keys.moveUp) direction = "up";
+      else if (event.key === keys.moveDown) direction = "down";
+      else if (event.key === keys.moveLeft) direction = "left";
+      else if (event.key === keys.moveRight) direction = "right";
+
+      if (direction) {
+        handleMovePlayerWithDeath(direction);
+        updateViewport(state);
+      } else if (event.key === keys.spaceBar) {
+        if (state.inCombat) {
           if (combatStepRef.current) combatStepRef.current();
-        } else if (event.key === keys.showInventory) {
-          showInventory();
-        } else if (isDropping && /^[1-9]$/.test(event.key)) {
-          // Number keys 1-9
-          const index = parseInt(event.key, 10) - 1; // Convert to 0-based index
-          const itemToDrop = state.player.inventory[index];
-          if (itemToDrop) {
-            dispatch({ type: "DROP_ITEM", payload: { itemId: itemToDrop.id } });
-            showDialog(`Dropped ${itemToDrop.name}.`, 3000);
-            setIsDropping(false);
+        } else {
+          handleMovePlayerWithDeath(null);
+        }
+      } else if (event.key === keys.showInventory) {
+        showInventory();
+      } else if (event.key === keys.showWeaponsInventory) {
+        showWeaponsInventory();
+      } else if (isDropping && /^[1-9]$/.test(event.key)) {
+        const index = parseInt(event.key, 10) - 1;
+        const itemToDrop = state.player.inventory[index];
+        if (itemToDrop) {
+          dispatch({ type: "DROP_ITEM", payload: { itemId: itemToDrop.id } });
+          showDialog(`Dropped ${itemToDrop.name}.`, 3000);
+          setIsDropping(false);
+          dispatch({ type: "TOGGLE_INVENTORY" });
+        }
+      } else if (isDroppingWeapon && /^[1-9]$/.test(event.key)) {
+        const index = parseInt(event.key, 10) - 1;
+        const weaponToDrop = state.player.weapons[index];
+        if (weaponToDrop) {
+          if (isEquippingWeapon) {
+            // Equip the selected weapon
+            dispatch({ type: "EQUIP_WEAPON", payload: { weaponId: weaponToDrop.id } });
+            const weaponDetails = state.weapons.find((w) => w.id === weaponToDrop.id);
+            showDialog(`Equipped ${weaponDetails.name}.`, 3000);
+            setIsEquippingWeapon(false);
+            setIsDroppingWeapon(false);
+            dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
+          } else {
+            // Drop the selected weapon
+            if (weaponToDrop.id === "weapon-discos-001") {
+              showDialog("Cannot drop this weapon!", 3000);
+              setIsDroppingWeapon(false);
+              dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
+            } else {
+              dispatch({ type: "DROP_WEAPON", payload: { weaponId: weaponToDrop.id } });
+              const weaponDetails = state.weapons.find((w) => w.id === weaponToDrop.id);
+              showDialog(`Dropped ${weaponDetails.name}.`, 3000);
+              setIsDroppingWeapon(false);
+              dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
+            }
           }
+        }
+      } else if (isDroppingWeapon && event.key === keys.equipWeapon) {
+        // Enter equip mode if there are multiple weapons
+        if (state.player.weapons.length > 1) {
+          setIsEquippingWeapon(true);
+          // Refresh the dialog to show the "Equip Weapon Number" prompt
+          showWeaponsInventory();
         }
       }
     };
+
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [state, phase, showDialog, showInventory, isDropping]);
+  }, [
+    state,
+    phase,
+    showDialog,
+    showInventory,
+    showWeaponsInventory,
+    isDropping,
+    isDroppingWeapon,
+    isEquippingWeapon,
+  ]);
 
   useEffect(() => {
     if (phase === "gameplay") {
@@ -228,7 +321,6 @@ const App = () => {
                   showEntityDescription(state.player.description);
                 }}
               />
-              {/* Removed standalone redoubt rendering */}
               {state.greatPowers &&
                 state.greatPowers.map((power) => (
                   <div
@@ -243,7 +335,6 @@ const App = () => {
                     onClick={() => showEntityDescription(power.description)}
                   />
                 ))}
-
               {state.objects &&
                 state.objects.map((object) => {
                   const handleObjectClick = (event) => {
@@ -256,7 +347,7 @@ const App = () => {
                       state.tileSize
                     );
 
-                    if (!isWithinBounds) return; // Don't show description if click is outside bounds
+                    if (!isWithinBounds) return;
 
                     showEntityDescription(object.description);
                   };
@@ -308,14 +399,13 @@ const App = () => {
                     </React.Fragment>
                   );
                 })}
-
               {state.items &&
                 state.items
                   .filter((item) => item.active)
                   .map((item) => {
                     return (
                       <div
-                        key={item.shortName} // Potential issue: duplicate keys
+                        key={item.shortName}
                         id={item.shortName}
                         className={item.shortName}
                         style={{
@@ -455,17 +545,17 @@ const App = () => {
             )}
           </div>
           <Dialog
-            children={dialogMessage} // Replaces GameDialog
+            children={dialogMessage}
             onClose={() => setDialogMessage("")}
             showCloseButton={true}
-            duration={null} // Managed by showDialog
+            duration={null}
           />
           <Dialog
-            key={deathCount} // Unique key for death/description dialog
+            key={deathCount}
             children={deathMessage}
             onClose={() => setDeathMessage("")}
             showCloseButton={true}
-            duration={5000} // Default for descriptions
+            duration={5000}
           />
           <audio
             id="background-audio"

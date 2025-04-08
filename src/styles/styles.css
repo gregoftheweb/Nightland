@@ -215,6 +215,20 @@ html {
   height: 40px;
   background: url("../../public/assets/images/maguffinRock.png") no-repeat center center / contain;
 }
+
+.shortsword {
+  border: 2px solid blue;
+  background-color: transparent;
+  box-sizing: border-box;
+  box-shadow: 0 0 5px blue; /* Add a blue glow */
+}
+
+.shortsword:hover {
+  background-color: rgba(0, 0, 255, 0.1);
+  box-shadow: 0 0 10px blue; /* Stronger glow on hover */
+  cursor: pointer;
+}
+
 .abhuman {
     position: absolute;
     width: 40px;

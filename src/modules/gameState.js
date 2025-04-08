@@ -13,6 +13,8 @@ export const getInitialState = (levelId = 1) => {
       .map(() => Array(400).fill(".")),
     level: levelConfig.id,
     levels: [levelConfig],
+    showInventory: false, // Track regular inventory visibility
+    showWeaponsInventory: false, // Track weapons inventory visibility
     player: {
       name: "Christos",
       shortName: "christos",
@@ -42,7 +44,8 @@ export const getInitialState = (levelId = 1) => {
         id: "weapon-discos-001",
         shortName: "discos",
         name: "Discos",
-        description: "Physically paired with Christos, powered by the Earth Current. This is a pole arm with a spinning blue disc of death for the evil monsters of the Night Land.",
+        description:
+          "Physically paired with Christos, powered by the Earth Current. This is a pole arm with a spinning blue disc of death for the evil monsters of the Night Land.",
         damage: { min: 2, max: 12 }, // 2-12
         attack: 1, // +1 to attack
         toHit: 2, // +4 to-hit bonus (heroic weapon)
@@ -52,7 +55,8 @@ export const getInitialState = (levelId = 1) => {
         id: "weapon-shortsword-002",
         shortName: "shortsword",
         name: "Short Sword",
-        description: "A simple blade forged in the Last Redoubt, sharp and reliable against the lesser horrors.",
+        description:
+          "A simple blade forged in the Last Redoubt, sharp and reliable against the lesser horrors.",
         damage: { min: 1, max: 6 }, // 1-6 (standard short sword vibe)
         attack: 0, // +0 to attack
         toHit: 0, // +0 to-hit bonus
@@ -130,7 +134,6 @@ export const reducer = (state = initialState, action) => {
       };
 
     case "UPDATE_ITEM":
-      
       return {
         ...state,
         items: state.items.map((item) =>
@@ -153,7 +156,7 @@ export const reducer = (state = initialState, action) => {
         active: true,
         collectible: true,
       };
-      
+
       return {
         ...state,
         player: {
@@ -251,7 +254,6 @@ export const reducer = (state = initialState, action) => {
         ),
       };
     case "RESET_HP":
-      
       return {
         ...state,
         player: { ...state.player, hp: state.player.maxHP },
@@ -334,6 +336,64 @@ export const reducer = (state = initialState, action) => {
             : obj
         ),
       };
+    case "TOGGLE_INVENTORY":
+      return {
+        ...state,
+        showInventory: !state.showInventory,
+        showWeaponsInventory: false, // Close weapons inventory if regular inventory is toggled
+      };
+
+    case "TOGGLE_WEAPONS_INVENTORY":
+      return {
+        ...state,
+        showWeaponsInventory: !state.showWeaponsInventory,
+        showInventory: false, // Close regular inventory if weapons inventory is toggled
+      };
+    case "ADD_TO_WEAPONS":
+      const { weapon } = action.payload;
+      if (state.player.weapons.length >= state.player.maxWeaponsSize) {
+        console.log("Weapons inventory full!");
+        return state;
+      }
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          weapons: [...state.player.weapons, weapon],
+        },
+      };
+
+      case "DROP_WEAPON":
+        const { weaponId } = action.payload;
+        const droppedWeapon = state.player.weapons.find((w) => w.id === weaponId);
+        if (!droppedWeapon) return state;
+        if (droppedWeapon.id === "weapon-discos-001") {
+          console.log("Cannot drop the Discos!");
+          return state;
+        }
+      
+        const weaponDetails = state.weapons.find((w) => w.id === weaponId);
+        const newWeaponItem = {
+          name: weaponDetails.name,
+          shortName: weaponDetails.shortName,
+          position: { ...state.player.position },
+          description: weaponDetails.description,
+          active: true,
+          collectible: true,
+          type: "weapon",
+          weaponId: weaponId,
+        };
+      
+        return {
+          ...state,
+          player: {
+            ...state.player,
+            weapons: state.player.weapons.filter((w) => w.id !== weaponId),
+          },
+          items: [...state.items, newWeaponItem],
+          dropSuccess: true,
+        };
+      
     default:
       console.warn(`Unhandled action type: ${action.type}`);
       return state || initialState;
