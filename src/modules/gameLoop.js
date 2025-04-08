@@ -35,13 +35,12 @@ export const handleMovePlayer = (
       isMove = false;
       break;
     default:
-      console.log("handleMovePlayer - Unknown key, returning");
+     
       return;
   }
 
   // Move the player
   if (isMove) {
-    console.log("handleMovePlayer - Dispatching MOVE_PLAYER to:", newPosition);
     dispatch({ type: "MOVE_PLAYER", payload: { position: newPosition } });
   }
   const updatedState = {
@@ -121,16 +120,16 @@ export const handleMovePlayer = (
     }
   });
 
-  if (objectAtPosition) {
+/*   if (objectAtPosition) {
     console.log("Collided with:", objectAtPosition.name, "at", newPosition);
-  }
+  } */
 
   if (objectAtPosition && objectAtPosition.effects) {
     const now = Date.now();
     const lastTrigger = objectAtPosition.lastTrigger || 0;
     if (now - lastTrigger > 50000) {
       // 5-second cooldown
-      console.log("Collision with:", objectAtPosition, "at", newPosition);
+     
       objectAtPosition.effects.forEach((effect) => {
         dispatch({
           type: "TRIGGER_EFFECT",
@@ -186,9 +185,7 @@ export const handleMovePlayer = (
     );
   });
   if (poolAtPosition && state.poolsTemplate.effects) {
-    console.log("handleMovePlayer - Pool at position:", poolAtPosition, "Effects:", state.poolsTemplate.effects);
-    state.poolsTemplate.effects.forEach((effect) => {
-      console.log("handleMovePlayer - Triggering effect:", effect);
+   state.poolsTemplate.effects.forEach((effect) => {
       dispatch({
         type: "TRIGGER_EFFECT",
         payload: { effect, position: newPosition },
@@ -201,7 +198,6 @@ export const handleMovePlayer = (
           showDialog(`The ${state.poolsTemplate.name} cloaks you in silence.`, 3000);
           break;
         default:
-          console.log("handleMovePlayer - Unknown effect type:", effect.type);
           break;
       }
     });
@@ -261,12 +257,7 @@ export const moveMonsters = (
   if (state.inCombat) return;
 
   const playerPos = playerPosOverride || state.player.position;
-  console.log(
-    "moveMonsters - isHidden:",
-    state.player.isHidden,
-    "playerPos:",
-    playerPos
-  );
+  
 
   // First, handle movement for each monster
   state.activeMonsters.forEach((monster) => {
@@ -274,28 +265,17 @@ export const moveMonsters = (
       state.attackSlots.some((slot) => slot.id === monster.id) ||
       state.waitingMonsters.some((m) => m.id === monster.id)
     ) {
-      console.log(
-        `Monster ${monster.id} skipped (in attackSlots or waitingMonsters)`
-      );
+      
       return;
     }
 
     let newPos;
     if (state.player.isHidden) {
-      console.log(
-        `Monster ${monster.id} - Moving away from player. Current position:`,
-        monster.position
-      );
+      
       newPos = moveAway(monster, playerPos, state.gridWidth, state.gridHeight);
-      console.log(
-        `Monster ${monster.id} - New position after moveAway:`,
-        newPos
-      );
+
     } else {
-      console.log(
-        `Monster ${monster.id} - Moving toward player. Current position:`,
-        monster.position
-      );
+    
       const moveDistance = monster.moveRate;
       newPos = { ...monster.position };
 
@@ -327,14 +307,10 @@ export const moveMonsters = (
 
       if (checkCollision(newPos, playerPos)) {
         if (!state.player.isHidden) {
-          console.log(
-            `Monster ${monster.id} - Collision detected, setting up combat`
-          );
+        
           setupCombat(state, dispatch, monster, showDialog, playerPos);
         } else {
-          console.log(
-            `Monster ${monster.id} - Collision detected, but player is hidden, no combat`
-          );
+         
         }
         return;
       } else {
@@ -345,10 +321,7 @@ export const moveMonsters = (
           );
           if (distance <= 2) {
             if (!state.waitingMonsters.some((m) => m.id === monster.id)) {
-              console.log(
-                `Monster ${monster.id} - Added to waitingMonsters at position:`,
-                newPos
-              );
+             
               dispatch({
                 type: "UPDATE_WAITING_MONSTERS",
                 payload: {
@@ -363,10 +336,7 @@ export const moveMonsters = (
           }
         }
       }
-      console.log(
-        `Monster ${monster.id} - New position after moving toward player:`,
-        newPos
-      );
+     
     }
 
     dispatch({
@@ -376,20 +346,14 @@ export const moveMonsters = (
   });
 
   // After moving all monsters, remove those that are too far away
-  console.log(
-    "Before disappearFarMonsters - activeMonsters:",
-    state.activeMonsters
-  );
+  
   const filteredMonsters = disappearFarMonsters(
     state.activeMonsters,
     playerPos
   );
-  console.log(
-    "After disappearFarMonsters - filteredMonsters:",
-    filteredMonsters
-  );
+ 
   if (filteredMonsters.length !== state.activeMonsters.length) {
-    console.log("Monster(s) disappeared due to distance.");
+   
     dispatch({
       type: "UPDATE_ACTIVE_MONSTERS",
       payload: { activeMonsters: filteredMonsters },

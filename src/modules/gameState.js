@@ -101,12 +101,7 @@ export const reducer = (state = initialState, action) => {
       };
 
     case "UPDATE_ITEM":
-      console.log(
-        "Updating item:",
-        action.payload.shortName,
-        "to",
-        action.payload.updates
-      );
+      
       return {
         ...state,
         items: state.items.map((item) =>
@@ -129,7 +124,7 @@ export const reducer = (state = initialState, action) => {
         active: true,
         collectible: true,
       };
-      console.log("Dropping item:", newItem);
+      
       return {
         ...state,
         player: {
@@ -227,12 +222,7 @@ export const reducer = (state = initialState, action) => {
         ),
       };
     case "RESET_HP":
-      console.log(
-        "Reducer - Resetting HP to",
-        state.player.maxHP,
-        "from",
-        state.player.hp
-      );
+      
       return {
         ...state,
         player: { ...state.player, hp: state.player.maxHP },

@@ -22,11 +22,7 @@ export const combatStep = (state, dispatch, setLastAction = () => {}) => {
     const targetDexMod = getAttributeModifier(targetAttrs.dex);
     const effectiveAC = target.ac + targetDexMod;
 
-    console.log(
-      `${attacker.name} rolls ${attackRoll} + ${attackBonus} = ${totalAttack} vs ${
-        target.name
-      }'s AC ${effectiveAC} (Base ${target.ac} + DEX ${targetDexMod})${isCrit ? " (CRIT)" : ""}`
-    );
+   
     return { hit: totalAttack >= effectiveAC || isCrit, isCrit };
   };
 
