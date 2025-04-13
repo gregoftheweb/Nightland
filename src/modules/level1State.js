@@ -17,8 +17,8 @@ export const level1State = {
       initiative: 5,
       maxInstances: 6,
       moveRate: 2,
-      spawnRate: 8,
-      spawnChance: 0.5,
+      spawnRate: 38,
+      spawnChance: 0.2,
       attack: 5,
       ac: 12,
       soulKey: "686365627E64",
@@ -35,7 +35,7 @@ export const level1State = {
       initiative: 5,
       maxInstances: 3,
       moveRate: 2,
-      spawnRate: 25,
+      spawnRate: 38,
       spawnChance: 0.2,
       attack: 8,
       ac: 13,
@@ -152,7 +152,11 @@ export const level1State = {
       description: "A peculiar stone that hums with an unknown energy.",
       active: true,
       type: "item",
-      collectible: true,
+      collectible: true, 
+      // splash: {
+      //   image: "/assets/images/sadprincess.png",
+      //   text: "sweet sweet sweet",
+      // },
     },
     {
       name: "Short Sword",
@@ -194,21 +198,34 @@ export const level1State = {
     ],
   },
   footsteps: [
-    {
-      id: 1,
-      position: { row: 393, col: 195 },
-      direction: 270,
-    },
-    {
-      id: 2,
-      position: { row: 391, col: 130 },
-      direction: 250,
-    },
-    {
-      id: 3,
-      position: { row: 385, col: 70 },
-      direction: 250,
-    },
+    { id: 1, position: { row: 393, col: 195 }, direction: 250 }, // start of trail
+    { id: 2, position: { row: 393, col: 179 }, direction: 250 },
+    { id: 3, position: { row: 381, col: 120 }, direction: 250 },
+    { id: 35, position: { row: 381, col: 40 }, direction: 250 },
+    { id: 4, position: { row: 373, col: 5 }, direction: 310 },
+    { id: 5, position: { row: 350, col: 10 }, direction: 0 }, // corner 1 (bottom-left)
+    { id: 6, position: { row: 330, col: 37 }, direction: 40 },
+    { id: 65, position: { row: 330, col: 60 }, direction: 50 },
+    { id: 7, position: { row: 330, col: 90 }, direction: 50 },
+    { id: 75, position: { row: 325, col: 150 }, direction: 50 },
+    { id: 8, position: { row: 315, col: 222 }, direction: 50 },
+    { id: 9, position: { row: 285, col: 266 }, direction: 50 },
+    { id: 10, position: { row: 265, col: 333 }, direction: 30 },
+    { id: 11, position: { row: 250, col: 390 }, direction: 310 }, // corner 2 (bottom-right)
+    { id: 12, position: { row: 245, col: 333 }, direction: 250 },
+    { id: 13, position: { row: 230, col: 266 }, direction: 270 },
+    { id: 14, position: { row: 230, col: 222 }, direction: 270 },
+    { id: 15, position: { row: 200, col: 90 }, direction: 270 },
+    { id: 16, position: { row: 175, col: 10 }, direction: 310 },
+    { id: 17, position: { row: 150, col: 10 }, direction: 0 }, // corner 3 (top-left)
+    { id: 18, position: { row: 125, col: 37 }, direction: 40 },
+    { id: 19, position: { row: 110, col: 90 }, direction: 50 },
+    { id: 20, position: { row: 110, col: 222 }, direction: 50 },
+    { id: 21, position: { row: 90, col: 266 }, direction: 50 },
+    { id: 22, position: { row: 70, col: 333 }, direction: 30 },
+    { id: 23, position: { row: 50, col: 390 }, direction: 310 }, // corner 4 (top-right)
+    { id: 24, position: { row: 30, col: 333 }, direction: 250 },
+    { id: 26, position: { row: 10, col: 215 }, direction: 310 }, // end of trail
   ],
   footstepsTemplate: {
     name: "Footsteps of Persius",

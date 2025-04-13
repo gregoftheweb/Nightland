@@ -17,6 +17,7 @@ import DeathDialog from "./components/DeathDialog";
 import Dialog from "./components/Dialog";
 import SettingsMenu from "./components/SettingsMenu";
 import { handleMovePlayer } from "./modules/gameLoop";
+import SplashOverlay from "./components/SplashOverlay";
 import {
   isClickWithinBounds,
   initializeEntityStyles,
@@ -40,6 +41,7 @@ const App = () => {
   const gameContainerRef = useRef(null);
   const combatStepRef = useRef(null);
   const audioRef = useRef(null);
+  const [overlay, setOverlay] = useState(null); // { image, text } or null
 
   const currentLevel = (state.levels || []).find(
     (lvl) => lvl.id === state.level
@@ -103,10 +105,11 @@ const App = () => {
   };
 
   const handleMovePlayerWithDeath = (direction) =>
-    handleMovePlayer(state, dispatch, direction, showDialog, (msg) => {
+    handleMovePlayer(state, dispatch, direction, setOverlay, showDialog, (msg) => {
       setDeathMessage(msg);
       setDeathCount((prev) => prev + 1);
     });
+  
 
   const showInventory = useCallback(() => {
     if (state.player.inventory.length === 0) {
@@ -151,7 +154,9 @@ const App = () => {
           </h3>
           <ul>
             {state.player.weapons.map((weapon, index) => {
-              const weaponDetails = state.weapons.find((w) => w.id === weapon.id);
+              const weaponDetails = state.weapons.find(
+                (w) => w.id === weapon.id
+              );
               return (
                 <li key={weapon.id}>
                   {index + 1}. {weaponDetails.name}{" "}
@@ -174,16 +179,19 @@ const App = () => {
         }
       );
     }
-  }, [state.player.weapons, state.player.maxWeaponsSize, showDialog, isEquippingWeapon]);
-
-
+  }, [
+    state.player.weapons,
+    state.player.maxWeaponsSize,
+    showDialog,
+    isEquippingWeapon,
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (phase !== "gameplay") return;
       event.preventDefault();
       const { keys } = gamePreferences;
-  
+
       if (handleMovementKey(event, keys)) return;
       if (handleSpacebar(event, keys)) return;
       if (handleInventoryToggle(event, keys)) return;
@@ -192,7 +200,7 @@ const App = () => {
       if (handleWeaponKey(event)) return;
       if (handleEquipModeToggle(event, keys)) return;
     };
-  
+
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [
@@ -205,8 +213,6 @@ const App = () => {
     isDroppingWeapon,
     isEquippingWeapon,
   ]);
-  
-
 
   const handleMovementKey = (event, keys) => {
     const directionMap = {
@@ -215,7 +221,7 @@ const App = () => {
       [keys.moveLeft]: "left",
       [keys.moveRight]: "right",
     };
-  
+
     const direction = directionMap[event.key];
     if (direction) {
       handleMovePlayerWithDeath(direction);
@@ -224,10 +230,10 @@ const App = () => {
     }
     return false;
   };
-  
+
   const handleSpacebar = (event, keys) => {
     if (event.key !== keys.spaceBar) return false;
-  
+
     if (state.inCombat && combatStepRef.current) {
       combatStepRef.current();
     } else {
@@ -235,7 +241,7 @@ const App = () => {
     }
     return true;
   };
-  
+
   const handleInventoryToggle = (event, keys) => {
     if (event.key === keys.showInventory) {
       showInventory();
@@ -243,7 +249,7 @@ const App = () => {
     }
     return false;
   };
-  
+
   const handleWeaponsInventoryToggle = (event, keys) => {
     if (event.key === keys.showWeaponsInventory) {
       showWeaponsInventory();
@@ -251,10 +257,10 @@ const App = () => {
     }
     return false;
   };
-  
+
   const handleItemDropKey = (event) => {
     if (!isDropping || !/^[1-9]$/.test(event.key)) return false;
-  
+
     const index = parseInt(event.key, 10) - 1;
     const itemToDrop = state.player.inventory[index];
     if (itemToDrop) {
@@ -265,18 +271,21 @@ const App = () => {
     }
     return true;
   };
-  
+
   const handleWeaponKey = (event) => {
     if (!isDroppingWeapon || !/^[1-9]$/.test(event.key)) return false;
-  
+
     const index = parseInt(event.key, 10) - 1;
     const weaponToDrop = state.player.weapons[index];
     if (!weaponToDrop) return false;
-  
+
     const weaponDetails = state.weapons.find((w) => w.id === weaponToDrop.id);
-  
+
     if (isEquippingWeapon) {
-      dispatch({ type: "EQUIP_WEAPON", payload: { weaponId: weaponToDrop.id } });
+      dispatch({
+        type: "EQUIP_WEAPON",
+        payload: { weaponId: weaponToDrop.id },
+      });
       showDialog(`Equipped ${weaponDetails.name}.`, 3000);
       setIsEquippingWeapon(false);
       setIsDroppingWeapon(false);
@@ -285,37 +294,29 @@ const App = () => {
       if (weaponToDrop.id === "weapon-discos-001") {
         showDialog("Cannot drop this weapon!", 3000);
       } else {
-        dispatch({ type: "DROP_WEAPON", payload: { weaponId: weaponToDrop.id } });
+        dispatch({
+          type: "DROP_WEAPON",
+          payload: { weaponId: weaponToDrop.id },
+        });
         showDialog(`Dropped ${weaponDetails.name}.`, 3000);
       }
       setIsDroppingWeapon(false);
       dispatch({ type: "TOGGLE_WEAPONS_INVENTORY" });
     }
-  
+
     return true;
   };
-  
+
   const handleEquipModeToggle = (event, keys) => {
     if (!isDroppingWeapon || event.key !== keys.equipWeapon) return false;
-  
+
     if (state.player.weapons.length > 1) {
       setIsEquippingWeapon(true);
       showWeaponsInventory(); // Refresh prompt
     }
-  
+
     return true;
   };
-  
-
-
-
-
-
-
-
-
-
-
 
   useEffect(() => {
     if (phase === "gameplay") {
@@ -374,6 +375,7 @@ const App = () => {
                 }}
                 onClick={() => {
                   console.log("Christos SoulKey:", state.player.soulKey);
+                  console.log("Christos Position: ", state.player.position.col, state.player.position.row)
                   showEntityDescription(state.player.description);
                 }}
               />
@@ -503,7 +505,10 @@ const App = () => {
                         height: "40px",
                       }}
                       onClick={() => {
-                        console.log(`${monster.name} SoulKey:`, monster.soulKey);
+                        console.log(
+                          `${monster.name} SoulKey:`,
+                          monster.soulKey
+                        );
                         showEntityDescription(monster.description);
                       }}
                     />
@@ -572,7 +577,15 @@ const App = () => {
                     />
                   );
                 })}
+             
             </div>
+            {overlay && (
+                <SplashOverlay
+                  imageSrc={overlay.image}
+                  text={overlay.text}
+                  onClose={() => setOverlay(null)}
+                />
+              )}
             <StatusBar
               hp={state.player.hp}
               onSettingsToggle={toggleSettings}

@@ -9,8 +9,9 @@ export const handleMovePlayer = (
   state,
   dispatch,
   direction,
+  setOverlay,
   showDialog,
-  setDeathMessage 
+  setDeathMessage
 ) => {
   if (state.inCombat) return;
 
@@ -50,61 +51,68 @@ export const handleMovePlayer = (
     player: { ...state.player, position: newPosition },
   };
 
- // Check for collectible items or weapons
- const collectibleAtPosition = state.items.find((item) => {
-  if (!item || !item.active || !item.collectible || !item.position) return false;
+  // Check for collectible items or weapons
+  const collectibleAtPosition = state.items.find((item) => {
+    if (!item || !item.active || !item.collectible || !item.position)
+      return false;
 
-  const itemRowStart = item.position.row;
-  const itemColStart = item.position.col;
-  const itemWidth = item.size?.width || 1;
-  const itemHeight = item.size?.height || 1;
-  const itemRowEnd = itemRowStart + itemHeight - 1;
-  const itemColEnd = itemColStart + itemWidth - 1;
+    const itemRowStart = item.position.row;
+    const itemColStart = item.position.col;
+    const itemWidth = item.size?.width || 1;
+    const itemHeight = item.size?.height || 1;
+    const itemRowEnd = itemRowStart + itemHeight - 1;
+    const itemColEnd = itemColStart + itemWidth - 1;
 
-  return (
-    item.active &&
-    item.collectible &&
-    newPosition.row >= itemRowStart &&
-    newPosition.row <= itemRowEnd &&
-    newPosition.col >= itemColStart &&
-    newPosition.col <= itemColEnd
-  );
-});
-
-if (collectibleAtPosition) {
-  if (collectibleAtPosition.type === "weapon") {
-    // Handle weapon pickup
-    const weapon = state.weapons.find(
-      (w) => w.id === collectibleAtPosition.weaponId
+    return (
+      item.active &&
+      item.collectible &&
+      newPosition.row >= itemRowStart &&
+      newPosition.row <= itemRowEnd &&
+      newPosition.col >= itemColStart &&
+      newPosition.col <= itemColEnd
     );
-    if (!weapon) {
-      console.warn("Weapon not found:", collectibleAtPosition.weaponId);
-      return;
-    }
-    const weaponEntry = {
-      id: weapon.id,
-      equipped: false, // Not equipped by default
-    };
-    dispatch({ type: "ADD_TO_WEAPONS", payload: { weapon: weaponEntry } });
-    showDialog(`Picked up ${weapon.name}!`, 3000);
-  } else {
-    // Handle regular item pickup
-    const item = {
-      id: `${collectibleAtPosition.shortName}-${Date.now()}`,
-      name: collectibleAtPosition.name,
-      description: collectibleAtPosition.description,
-    };
-    dispatch({ type: "ADD_TO_INVENTORY", payload: { item } });
-    showDialog(`Picked up ${item.name}!`, 3000);
-  }
-  dispatch({
-    type: "UPDATE_ITEM",
-    payload: {
-      shortName: collectibleAtPosition.shortName,
-      updates: { active: false },
-    },
   });
-}
+
+  if (collectibleAtPosition?.splash) {
+    setOverlay({
+      image: collectibleAtPosition.splash.image,
+      text: collectibleAtPosition.splash.text,
+    });
+  }
+
+  if (collectibleAtPosition) {
+    if (collectibleAtPosition.type === "weapon") {
+      // Handle weapon pickup
+      const weapon = state.weapons.find(
+        (w) => w.id === collectibleAtPosition.weaponId
+      );
+      if (!weapon) {
+        console.warn("Weapon not found:", collectibleAtPosition.weaponId);
+        return;
+      }
+      const weaponEntry = {
+        id: weapon.id,
+        equipped: false, // Not equipped by default
+      };
+      dispatch({ type: "ADD_TO_WEAPONS", payload: { weapon: weaponEntry } });
+      showDialog(`Picked up ${weapon.name}!`, 3000);
+    } else {
+      // Handle regular item pickup
+      const item = {
+        id: `${collectibleAtPosition.shortName}-${Date.now()}`,
+        ...collectibleAtPosition,  // Spread the remaining properties
+      };
+      dispatch({ type: "ADD_TO_INVENTORY", payload: { item } });
+      showDialog(`Picked up ${item.name}!`, 3000);
+    }
+    dispatch({
+      type: "UPDATE_ITEM",
+      payload: {
+        shortName: collectibleAtPosition.shortName,
+        updates: { active: false },
+      },
+    });
+  }
 
   // Check for objects with effects at the new position, considering size
   const objectAtPosition = state.objects.find((obj) => {
@@ -142,7 +150,14 @@ if (collectibleAtPosition) {
     }
   });
 
-/*   if (objectAtPosition) {
+
+  // if (objectAtPosition?.splash) {
+  //   setOverlay({
+  //     image: objectAtPosition.splash.image,
+  //     text: objectAtPosition.splash.text,
+  //   });
+  // }
+  /*   if (objectAtPosition) {
     console.log("Collided with:", objectAtPosition.name, "at", newPosition);
   } */
 
@@ -151,7 +166,7 @@ if (collectibleAtPosition) {
     const lastTrigger = objectAtPosition.lastTrigger || 0;
     if (now - lastTrigger > 50000) {
       // 5-second cooldown
-     
+
       objectAtPosition.effects.forEach((effect) => {
         dispatch({
           type: "TRIGGER_EFFECT",
@@ -207,7 +222,7 @@ if (collectibleAtPosition) {
     );
   });
   if (poolAtPosition && state.poolsTemplate.effects) {
-   state.poolsTemplate.effects.forEach((effect) => {
+    state.poolsTemplate.effects.forEach((effect) => {
       dispatch({
         type: "TRIGGER_EFFECT",
         payload: { effect, position: newPosition },
@@ -217,7 +232,10 @@ if (collectibleAtPosition) {
           showDialog("The Pool of Peace restores your strength!", 3000);
           break;
         case "hide":
-          showDialog(`The ${state.poolsTemplate.name} cloaks you in silence.`, 3000);
+          showDialog(
+            `The ${state.poolsTemplate.name} cloaks you in silence.`,
+            3000
+          );
           break;
         default:
           break;
@@ -279,7 +297,6 @@ export const moveMonsters = (
   if (state.inCombat) return;
 
   const playerPos = playerPosOverride || state.player.position;
-  
 
   // First, handle movement for each monster
   state.activeMonsters.forEach((monster) => {
@@ -287,17 +304,13 @@ export const moveMonsters = (
       state.attackSlots.some((slot) => slot.id === monster.id) ||
       state.waitingMonsters.some((m) => m.id === monster.id)
     ) {
-      
       return;
     }
 
     let newPos;
     if (state.player.isHidden) {
-      
       newPos = moveAway(monster, playerPos, state.gridWidth, state.gridHeight);
-
     } else {
-    
       const moveDistance = monster.moveRate;
       newPos = { ...monster.position };
 
@@ -329,10 +342,8 @@ export const moveMonsters = (
 
       if (checkCollision(newPos, playerPos)) {
         if (!state.player.isHidden) {
-        
           setupCombat(state, dispatch, monster, showDialog, playerPos);
         } else {
-         
         }
         return;
       } else {
@@ -343,7 +354,6 @@ export const moveMonsters = (
           );
           if (distance <= 2) {
             if (!state.waitingMonsters.some((m) => m.id === monster.id)) {
-             
               dispatch({
                 type: "UPDATE_WAITING_MONSTERS",
                 payload: {
@@ -358,7 +368,6 @@ export const moveMonsters = (
           }
         }
       }
-     
     }
 
     dispatch({
@@ -368,14 +377,13 @@ export const moveMonsters = (
   });
 
   // After moving all monsters, remove those that are too far away
-  
+
   const filteredMonsters = disappearFarMonsters(
     state.activeMonsters,
     playerPos
   );
- 
+
   if (filteredMonsters.length !== state.activeMonsters.length) {
-   
     dispatch({
       type: "UPDATE_ACTIVE_MONSTERS",
       payload: { activeMonsters: filteredMonsters },
@@ -427,7 +435,6 @@ export const checkMonsterSpawn = (state, dispatch, showDialog) => {
   }
 };
 
-
 const getSpawnPosition = (playerPosition) => {
   const gridHeight = 400;
   const gridWidth = 400;
@@ -447,13 +454,12 @@ const getSpawnPosition = (playerPosition) => {
 
     distance = Math.sqrt(
       Math.pow(spawnRow - playerPosition.row, 2) +
-      Math.pow(spawnCol - playerPosition.col, 2)
+        Math.pow(spawnCol - playerPosition.col, 2)
     );
   } while (distance < 10 || distance > 20); // Strict 10–20 tile ring
 
   return { row: spawnRow, col: spawnCol };
 };
-
 
 const checkCollision = (monsterPos, playerPos) => {
   return monsterPos.row === playerPos.row && monsterPos.col === playerPos.col;

@@ -149,12 +149,13 @@ export const reducer = (state = initialState, action) => {
         (item) => item.id === itemId
       );
       if (!droppedItem) return state;
+      console.log(droppedItem);
       const newItem = {
-        ...droppedItem,
-        shortName: droppedItem.shortName || "maguffinRock", // Ensure shortName is set
+        ...droppedItem,        
         position: { ...state.player.position },
         active: true,
-        collectible: true,
+      
+        
       };
 
       return {

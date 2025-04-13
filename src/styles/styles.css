@@ -126,9 +126,51 @@ html {
   position: relative;
   width: 16000px; /* 400 * 40px */
   height: 16000px; /* 400 * 40px */
- background: url("../../public/assets/images/dark-green-backround.jpg") repeat;
-  z-index: 0; /* Bottom of the stack (was 801) */
+  background-color: black;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px),
+    url("../../public/assets/images/dark-green-backround.jpg");
+  background-size: 40px 40px, 40px 40px, auto;
+  background-repeat: repeat, repeat, repeat;
+  z-index: 0;
 }
+
+.splash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(5, 5, 5, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.splash-image {
+  max-width: 90%;
+  max-height: 60%;
+  margin-bottom: 2rem;
+}
+
+.splash-text {
+  color: white;
+  font-size: 1.2rem;
+  max-width: 80%;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.splash-button {
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+
 
 .collision-mask {
   background-color: rgba(255, 0, 0, 0.3); /* Semi-transparent red */
@@ -186,6 +228,7 @@ html {
   z-index: 802;
   cursor: pointer;
 }
+
 .cursedTotem {
   position: absolute;
   width: 160px; /* 4 tiles * 40px - explicit match to gameState settings */
@@ -229,7 +272,6 @@ html {
   box-shadow: 0 0 10px blue; /* Stronger glow on hover */
   cursor: pointer;
 }
-
 
 .abhuman {
     position: absolute;
