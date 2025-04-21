@@ -153,10 +153,10 @@ export const level1State = {
       active: true,
       type: "item",
       collectible: true, 
-      // splash: {
-      //   image: "/assets/images/sadprincess.png",
-      //   text: "sweet sweet sweet",
-      // },
+      splash: {
+        image: "/assets/images/sadprincess.png",
+        text: "sweet sweet sweet",
+      },
     },
     {
       name: "Short Sword",
@@ -208,9 +208,12 @@ export const level1State = {
     { id: 65, position: { row: 330, col: 60 }, direction: 50 },
     { id: 7, position: { row: 330, col: 90 }, direction: 50 },
     { id: 75, position: { row: 325, col: 150 }, direction: 50 },
-    { id: 8, position: { row: 315, col: 222 }, direction: 50 },
-    { id: 9, position: { row: 285, col: 266 }, direction: 50 },
-    { id: 10, position: { row: 265, col: 333 }, direction: 30 },
+    { id: 76, position: { row: 322, col: 180 }, direction: 30 }, //above the river
+    { id: 77, position: { row: 318, col: 210 }, direction: 30 },
+    { id: 8, position: { row: 310, col: 240 }, direction: 30 },
+    { id: 9, position: { row: 295, col: 280 }, direction: 30 },
+    { id: 10, position: { row: 275, col: 323 }, direction: 30 },
+    { id: 105, position: { row: 265, col: 365 }, direction: 30 },
     { id: 11, position: { row: 250, col: 390 }, direction: 310 }, // corner 2 (bottom-right)
     { id: 12, position: { row: 245, col: 333 }, direction: 250 },
     { id: 13, position: { row: 230, col: 266 }, direction: 270 },
